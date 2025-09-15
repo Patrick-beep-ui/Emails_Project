@@ -11,5 +11,6 @@ class Prompt extends Model
 
     protected $primaryKey = 'prompt_id';
     public $timestamps = false;
-    protected $fillable = ['content', 'module'];
+    protected $fillable = ['content', 'module', 'parameters'];
+    protected $casts = ['parameters' => 'array'];
 }

@@ -5,6 +5,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\KeywordsController;
 use App\Http\Controllers\TagController;
+use App\Http\Controllers\PromptController;
 
 Route::get('/users', [UserController::class, 'users']);
 
@@ -22,4 +23,11 @@ Route::prefix('/tags')->group(function () {
 // Keywords Routes
 Route::prefix('/keywords')->group(function () {
     Route::get('/', [KeywordsController::class, 'showKeywords']);
+    Route::post('/addJson', [KeywordsController::class, 'addKeywordsFromJSON']);
+});
+
+//Propmts Routes
+Route::prefix('/propmts')->group(function() {
+    Route::get('/', [PromptController::class, 'showPropmts']);
+    //Route::get('/add', [PromptController::class, 'addPromptsFromJSON']);
 });
