@@ -22,7 +22,8 @@ Route::prefix('/tags')->group(function () {
 
 // Keywords Routes
 Route::prefix('/keywords')->group(function () {
-    Route::get('/', [KeywordsController::class, 'showKeywords']);
+    Route::get('/', [KeywordsController::class, 'showKeywordsList']);
+    Route::get('/{tag}', [KeywordsController::class, 'showKeywordsByTag']);
     Route::post('/addJson', [KeywordsController::class, 'addKeywordsFromJSON']);
 });
 

@@ -1,13 +1,14 @@
 import {useState, useEffect} from 'react';
 import axios from 'axios';
+import { getUsers } from '../services/usersService';
 
 export default function User() {
     const [users, setUsers] = useState([]);
 
     useEffect(() => {
-        const getUsers = async () => {
+        const getUsersData = async () => {
             try {
-                const response = await axios.get('/api/users');
+                const response = await getUsers();
                 const {data} = response;
                 setUsers(data.users);
                 console.log(data.users);
@@ -17,7 +18,7 @@ export default function User() {
             }
         }
 
-        getUsers();
+        getUsersData();
     }, [])
 
     return(

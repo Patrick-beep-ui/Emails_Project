@@ -93,4 +93,57 @@ class KeywordsController extends Controller
             ]);
         }
     }
+
+    public function showKeywordsList() {
+        try {
+            $keywords = Keyword::with('tags')->get();
+
+            return response()->json([
+                'keywords' => $keywords
+            ]);
+        }
+        catch(Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error getting keywords',
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    public function showKeywordsByTag($tagId) {
+        try {
+            $validator = Validator::make(['tagId' => $tagId], [
+                'tagId' => 'required|integer|exists:tags,tag_id'
+            ], [
+                'tagId.required' => 'Tag ID is required',
+                'tagId.integer'  => 'Tag ID must be a number',
+                'tagId.exists'   => 'Tag does not exist in the database',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'errors' => $validator->errors(),
+                ], 422);
+            }
+
+            $keywords = Keyword::select('keywords.*', 'tags.name as tag_name')
+                ->join('tags', 'keywords.tag_id', '=', 'tags.tag_id')
+                ->where('tags.tag_id', $tagId)
+                ->get();
+        
+
+            return response()->json([
+                'keywords' => $keywords
+            ]);
+        }
+        catch(Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error getting keywords by tag',
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
 }
