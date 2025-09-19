@@ -2,22 +2,23 @@
 
 namespace Database\Factories;
 
+use App\Models\Email;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-/**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Email>
- */
 class EmailFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
+    protected $model = Email::class;
+
     public function definition(): array
     {
         return [
-            //
+            'subject' => $this->faker->sentence(),
+            'message' => $this->faker->paragraph(),
+            'status' => $this->faker->randomElement(['draft','scheduled','sent']),
+            'scheduled_at' => $this->faker->optional()->dateTimeBetween('+1 days', '+1 month'),
+            'recipient' => User::factory()
         ];
     }
 }
+

@@ -2,22 +2,23 @@
 
 namespace Database\Factories;
 
+use App\Models\News;
+use App\Models\Source;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-/**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\News>
- */
 class NewsFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
+    protected $model = News::class;
+
     public function definition(): array
     {
         return [
-            //
+            'source_id' => Source::factory(),
+            'title' => $this->faker->sentence(),
+            'description' => $this->faker->paragraph(),
+            'url' => $this->faker->unique()->url(),
+            'published_at' => $this->faker->dateTime()
         ];
     }
 }
+

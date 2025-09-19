@@ -3,13 +3,21 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Services\QueryBuilderService;
 use App\Models\Keyword;
 use App\Models\Tag;
+use App\Models\User;
 use Illuminate\Support\Facades\Validator;
 use Exception;
 
 class KeywordsController extends Controller
 {
+    protected $queryBuilder;
+
+    public function __construct(QueryBuilderService $queryBuilder)
+    {
+        $this->queryBuilder = $queryBuilder;
+    }
 
     public function readJSON() {
         $path = app_path('Models/keywords.json');
@@ -144,6 +152,48 @@ class KeywordsController extends Controller
                 'message' => 'Error getting keywords by tag',
                 'error' => $e->getMessage()
             ]);
+        }
+    }
+
+    
+    public function groupKeywords($tagId) {
+        try {
+            $validator = Validator::make(['tagId' => $tagId], [
+                'tagId' => 'required|integer|exists:tags,tag_id'
+            ]);
+
+            if( $validator->fails() ) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation error',
+                    'errors'  => $validator->errors()
+                ], 422);
+            }
+
+            $tag = Tag::find($tagId);
+            if (!$tag) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tag not found'
+                ], 404);
+            }
+
+            // Bring keywords associated with the tag
+            $keywords = $tag->keywords()->pluck('content')->toArray();
+
+            // Group them into queries
+            $groupedQueries = $this->queryBuilder->groupKeywords($keywords, 10);
+
+            return response()->json([
+                'queries'    => $groupedQueries
+            ], 200);
+
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error grouping keywords',
+                'error'   => $e->getMessage()
+            ], 500);
         }
     }
 }

@@ -2,22 +2,19 @@
 
 namespace Database\Factories;
 
+use App\Models\Keyword;
+use App\Models\Tag;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-/**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Keyword>
- */
 class KeywordFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
+    protected $model = Keyword::class;
+
     public function definition(): array
     {
         return [
-            //
+            'content' => $this->faker->word(),
+            'tag_id'  => Tag::factory()
         ];
     }
 }
