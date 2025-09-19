@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
+use App\Mail\UserInviteMail;
+use Illuminate\Support\Facades\Mail;
 use Exception;
 
 class UserController extends Controller
@@ -172,5 +174,26 @@ class UserController extends Controller
                 'error'   => $e->getMessage()
             ], 500);
         }
+    }
+
+    public function sendEmail($userId) {
+        $user = User::find($userId);
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User not found'
+            ], 404);
+        }
+
+        $name = $user->first_name;
+        $link = url("/users");
+
+        Mail::to($user->email)->send(new UserInviteMail($name, $link));
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Email sent successfully'
+        ], 200);
     }
 }

@@ -12,8 +12,10 @@ use App\Http\Controllers\PromptController;
 Route::prefix('/users')->group(function() {
     Route::get('/', [UserController::class, 'users']);
     Route::post('/add', [UserController::class, 'add']);
-
     Route::get('/tags/{id}', [UserController::class, 'tags']);
+
+    //test sending email
+    Route::get('/send-invite/{userId}', [UserController::class, 'sendEmail']);
 });
 
 Route::get('/test', function() {
