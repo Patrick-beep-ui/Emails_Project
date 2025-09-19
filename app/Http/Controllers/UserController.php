@@ -136,46 +136,6 @@ class UserController extends Controller
         ], 200);
     }
 
-    public function groupKeywords($tagId) {
-        try {
-            $validator = Validator::make(['tagId' => $tagId], [
-                'tagId' => 'required|integer|exists:tags,tag_id'
-            ]);
-
-            if( $validator->fails() ) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Validation error',
-                    'errors'  => $validator->errors()
-                ], 422);
-            }
-
-            $user = User::find($tagId);
-            if (!$user) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Tag not found'
-                ], 404);
-            }
-
-            // Bring keywords associated with the tag
-            $keywords = $user->keywords()->pluck('keyword')->toArray();
-
-            $groupedQueries = $this->queryBuilder->groupKeywords($keywords, 10);
-
-            return response()->json([
-                'queries'    => $groupedQueries
-            ], 200);
-
-        } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Error grouping keywords',
-                'error'   => $e->getMessage()
-            ], 500);
-        }
-    }
-
     public function sendEmail($userId) {
         $user = User::find($userId);
 

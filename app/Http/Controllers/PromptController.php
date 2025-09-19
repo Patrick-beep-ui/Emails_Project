@@ -6,10 +6,19 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use App\Models\Prompt;
+use App\Services\AIService;
 use Exception;
 
 class PromptController extends Controller
 {
+
+    protected AIService $ai;
+
+    public function __construct(AIService $ai)
+    {
+        $this->ai = $ai;
+    }
+
     public function readJSON() {
         try {
             $path = app_path('Models/prompts.json');
@@ -83,6 +92,42 @@ class PromptController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error getting propmts',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function sortModule() {
+        try {
+            $result = $this->ai->run('Sort_DeDuplicate_Contextualize_News', [
+                'topic' => 'Laravel Contracts',
+                'tone'  => 'friendly'
+            ]);
+    
+            dd($result);
+        }
+        catch(Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error testing AI',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function optimizeModule() {
+        try {
+            $result = $this->ai->run('Optimize_Queries_For_Browser_Search', [
+                'product' => 'Laravel Contracts',
+                'audience'  => 'developers'
+            ]);
+    
+            dd($result);
+        }
+        catch(Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error testing AI',
                 'error' => $e->getMessage()
             ], 500);
         }
