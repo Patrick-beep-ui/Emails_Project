@@ -38,9 +38,9 @@ Route::prefix('/keywords')->group(function () {
 });
 
 //Propmts Routes
-Route::prefix('/propmts')->group(function() {
+Route::prefix('/prompts')->group(function() {
     Route::get('/', [PromptController::class, 'showPropmts']);
     //Route::get('/add', [PromptController::class, 'addPromptsFromJSON']);
     Route::get('/testAI', [PromptController::class, 'sortModule']);
-    Route::get('/optimize', [PromptController::class, 'optimizeModule'] );
+    Route::get('/optimize/{tagId}', [PromptController::class, 'optimizeModule'] );
 });

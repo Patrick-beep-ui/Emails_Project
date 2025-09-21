@@ -5,18 +5,22 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
+use App\Services\QueryBuilderService;
 use App\Models\Prompt;
 use App\Services\AIService;
+use App\Models\Tag;
 use Exception;
 
 class PromptController extends Controller
 {
 
     protected AIService $ai;
+    protected QueryBuilderService $queryBuilder;
 
-    public function __construct(AIService $ai)
+    public function __construct(AIService $ai, QueryBuilderService $queryBuilder)
     {
         $this->ai = $ai;
+        $this->queryBuilder = $queryBuilder;
     }
 
     public function readJSON() {
@@ -115,21 +119,34 @@ class PromptController extends Controller
         }
     }
 
-    public function optimizeModule() {
+   public function optimizeModule($tagId)
+    {
         try {
+            $tag = Tag::findOrFail($tagId);
+
+            // Get keywords
+            $keywords = $tag->keywords()->pluck('content')->toArray();
+
+            // Group keywords
+            $groupedQueries = $this->queryBuilder->groupKeywords($keywords, 10);
+
+            // Prepare final query string for prompt
+            //$queryString = implode(" OR ", array_column($groupedQueries, 'query'));
+
+            // Run the prompt and send to Gemini
             $result = $this->ai->run('Optimize_Queries_For_Browser_Search', [
-                'product' => 'Laravel Contracts',
-                'audience'  => 'developers'
+                'query' => $groupedQueries
             ]);
-    
-            dd($result);
-        }
-        catch(Exception $e) {
+
+            return response()->json($result);
+
+        } catch (Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error testing AI',
+                'message' => 'Error optimizing prompt',
                 'error' => $e->getMessage()
             ], 500);
         }
     }
+    
 }

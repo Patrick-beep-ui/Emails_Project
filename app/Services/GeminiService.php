@@ -1,31 +1,51 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\AI;
 
 use App\Models\Prompt;
-use Illuminate\Support\Facades\Http;
+use App\Services\QueryBuilderService;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Exception;
 
 class GeminiService
 {
-    public function run(string $module, array $params)
-    {
-        // 1. Get the prompt template from DB
-        $prompt = Prompt::where('module', $module)->firstOrFail();
+    protected $client;
+    protected $queryBuilder;
 
-        // 2. Inject dynamic parameters into the content
-        $content = $prompt->content;
-        foreach ($params as $key => $value) {
-            // JSON encode complex values if needed
-            $encoded = is_array($value) ? json_encode($value) : $value;
-            $content = str_replace('{{'.$key.'}}', $encoded, $content);
+    public function __construct(GeminiClient $client, QueryBuilderService $queryBuilder)
+    {
+        $this->client = $client;
+        $this->queryBuilder = $queryBuilder;
+    }
+
+    /**
+     * Run a prompt module with parameters
+     */
+    public function run(string $module, array $data = []): array
+    {
+        $prompt = Prompt::where('module', $module)->first();
+
+        if (!$prompt) {
+            throw new Exception("Prompt module {$module} not found.");
         }
 
-        // 3. Send to Gemini (pseudo-code — replace with actual Gemini API call)
-        $response = Http::withToken(config('services.gemini.key'))
-            ->post('https://gemini.googleapis.com/v1/models/text:generate', [
-                'prompt' => $content,
-            ]);
+        $content = $prompt->content;
 
-        return $response->json();
+        // Fill parameters placeholders
+        foreach ($data as $key => $value) {
+            // Make sure the key matches the placeholder
+            $content = str_replace('{{ $json.' . $key . ' }}', $value, $content);
+        }
+
+        if (!Storage::exists('prompts')) {
+            Storage::makeDirectory('prompts');
+        }
+
+        $filename = 'prompts/final_prompt_' . now()->format('Y_m_d_H_i_s') . '.txt';
+        Storage::put($filename, $content);
+
+        // Send to Gemini
+        return $this->client->generate($content);
     }
 }
