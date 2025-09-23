@@ -37,5 +37,9 @@ return [
     'gemini' => [
         'key' => env('GEMINI_API_KEY'),
     ],
+    'google' => [
+        'key' => env('GOOGLE_SEARCH_KEY'),
+        'cx'  => env('GOOGLE_SEARCH_ENGINE_ID'), // CSE
+    ],
 
 ];

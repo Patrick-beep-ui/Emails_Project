@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use App\Services\QueryBuilderService;
+use App\Services\GoogleSearchService;
 use App\Models\Prompt;
 use App\Services\AIService;
 use App\Models\Tag;
@@ -17,10 +18,13 @@ class PromptController extends Controller
     protected AIService $ai;
     protected QueryBuilderService $queryBuilder;
 
-    public function __construct(AIService $ai, QueryBuilderService $queryBuilder)
+    protected GoogleSearchService $googleSearch;
+
+    public function __construct(AIService $ai, QueryBuilderService $queryBuilder, GoogleSearchService $googleSearch)
     {
         $this->ai = $ai;
         $this->queryBuilder = $queryBuilder;
+        $this->googleSearch = $googleSearch;
     }
 
     public function readJSON() {
@@ -122,6 +126,7 @@ class PromptController extends Controller
    public function optimizeModule($tagId)
     {
         try {
+            $optimizedQueries = [];
             $tag = Tag::findOrFail($tagId);
 
             // Get keywords
@@ -133,17 +138,50 @@ class PromptController extends Controller
             // Prepare final query string for prompt
             //$queryString = implode(" OR ", array_column($groupedQueries, 'query'));
 
-            // Run the prompt and send to Gemini
-            $result = $this->ai->run('Optimize_Queries_For_Browser_Search', [
-                'query' => $groupedQueries
-            ]);
+            // Run the  prompt and send to Gemini
+            //$result = $this->ai->run('Optimize_Queries_For_Browser_Search', [
+                //'query' => $groupedQueries
+            //]);
 
-            return response()->json($result);
+            foreach ($groupedQueries as $group) {
+                $result = $this->ai->run('Optimize_Queries_For_Browser_Search', [
+                    'query' => $group['query']
+                ]);
+                $optimizedQueries[] = $result['text'];
+            }
+
+            //return response()->json([
+            //    'result' => $result,
+            //    'optimizedQueries' => $optimizedQueries
+            //]);
+
+            return $optimizedQueries;
 
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Error optimizing prompt',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function searchNewsModule($tagId) {
+        try {
+            $optimizedQueries = $this->optimizeModule($tagId);
+
+            $newsResults = $this->googleSearch->runMultipleSearch($optimizedQueries, 10);
+
+            return response()->json([
+                'queries' => $optimizedQueries,
+                'news'    => $newsResults
+            ], 200);
+
+        }
+        catch(Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error searching news',
                 'error' => $e->getMessage()
             ], 500);
         }

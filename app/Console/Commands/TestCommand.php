@@ -29,7 +29,7 @@ class TestCommand extends Command
             'role'       => 'user', // adjust if your app uses different roles
         ]);
     
-        $this->info('User created successfully! ID: ' . $user->id);
+        $this->info('User created successfully! ID: ' . $user->user_id);
     }
     
 }
