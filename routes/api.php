@@ -44,4 +44,6 @@ Route::prefix('/prompts')->group(function() {
     Route::get('/testAI', [PromptController::class, 'sortModule']);
     Route::get('/optimize/{tagId}', [PromptController::class, 'optimizeModule'] );
     Route::get('/search/{tagId}', [PromptController::class, 'searchNewsModule'] );
+    Route::get('/generate/{tagId}', [PromptController::class, 'cleanNewsModule'] );
+    Route::get('/view-clean/{tagId}', [PromptController::class, 'viewCleanNews']);
 });

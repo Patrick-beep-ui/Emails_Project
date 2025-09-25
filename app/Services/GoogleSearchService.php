@@ -22,7 +22,7 @@ class GoogleSearchService {
     public function search(string $query, int $numResults = 10): array {
         try {
             $response = Http::withOptions([
-                'verify' => false,   // dev only, see earlier note
+                'verify' => false,   // dev only
                 'timeout' => 10,     // max seconds to wait
                 'connect_timeout' => 5   // max seconds to establish connection
                 ]) 
@@ -31,7 +31,14 @@ class GoogleSearchService {
                 'cx'  => $this->searchEngineId,
                 'q'   => $query,
                 'num' => $numResults,
+                'date_restrict' => 'd2' 
             ]);
+
+            if ($response->failed()) {
+                return [
+                    'error' => $response->json() ?? ['message' => 'Unknown Google API error']
+                ];
+            }
 
             $json = $response->json();
 

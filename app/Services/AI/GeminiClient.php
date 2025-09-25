@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Log;
 
 class GeminiClient implements AIClientInterface
 {
-    public function generate(string $prompt): array
+    public function generate(string $prompt, int $timeout = 30): array
     {
         $apiKey = config('services.gemini.key');
     
@@ -16,6 +16,8 @@ class GeminiClient implements AIClientInterface
                 'Content-Type' => 'application/json',
                 'X-goog-api-key' => $apiKey,
             ])
+            ->timeout($timeout) 
+            ->connectTimeout(30)
             ->withoutVerifying() // ⚠️ only for dev
             ->post('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent', [
                 'contents' => [
