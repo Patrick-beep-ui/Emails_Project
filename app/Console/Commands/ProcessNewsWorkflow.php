@@ -4,6 +4,9 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Http\Controllers\PromptController;
+use App\Mail\SendNewsEmail;
+use Illuminate\Support\Facades\Mail;
+use App\Models\Tag;
 use Exception;
 
 class ProcessNewsWorkflow extends Command
@@ -92,6 +95,10 @@ class ProcessNewsWorkflow extends Command
 
             $this->info("Final verified & summarized articles: " . count($finalArticles));
 
+            $tagTitle = Tag::find($tagId)->name ?? 'Top News';
+
+            $htmlContent = $this->promptController->generateNewsHtml($finalArticles, $tagTitle);
+            Mail::to('P.SolisObregon@student.keiseruniversity.edu')->send(new SendNewsEmail($htmlContent, $tagTitle));
 
         } catch (Exception $e) {
             $this->error("Error during workflow: " . $e->getMessage());
