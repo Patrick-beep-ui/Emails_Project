@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
+use App\Models\Tag;
+use App\Models\Keyword;
 use App\Mail\UserInviteMail;
 use Illuminate\Support\Facades\Mail;
 use Exception;
@@ -156,4 +158,48 @@ class UserController extends Controller
             'message' => 'Email sent successfully'
         ], 200);
     }
+
+    public function getDashboardStats($userId)
+    {
+        try {
+            // Active subscriptions
+            $activeSubscriptions = Tag::whereHas('userTags', function($query) use ($userId) {
+                $query->where('user_tags.user_id', $userId)
+                      ->where('is_active', 1);
+            })->count();
+            
+
+            // Available tags
+            $availableTags = Tag::count();
+
+            // Keywords tracked across all user's active tags
+            $keywordsTracked = Keyword::whereHas('tags.userTags', function($query) use ($userId) {
+                $query->where('user_tags.user_id', $userId)
+                      ->where('is_active', 1);
+            })->count();
+
+            /*
+            // Articles this week (last 7 days)
+            $articlesThisWeek = DB::table('articles')
+                ->whereBetween('created_at', [now()->subDays(7), now()])
+                ->count();
+            */
+
+            return response()->json([
+                'stats' => [
+                    'activeSubscriptions' => $activeSubscriptions,
+                    'availableTags' => $availableTags,
+                    'keywordsTracked' => $keywordsTracked,
+                    //'articlesThisWeek' => $articlesThisWeek,
+                ],
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error fetching dashboard stats',
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
 }

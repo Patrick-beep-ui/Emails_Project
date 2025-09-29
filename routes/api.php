@@ -6,13 +6,18 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\KeywordsController;
 use App\Http\Controllers\TagController;
 use App\Http\Controllers\PromptController;
+use App\Http\Controllers\AuthController;
 
-
+// Login Routes
+Route::post('/login', [AuthController::class, 'login']);
+Route::middleware('auth:sanctum')->get('/user', [AuthController::class, 'user']);
+Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
 
 Route::prefix('/users')->group(function() {
     Route::get('/', [UserController::class, 'users']);
     Route::post('/add', [UserController::class, 'add']);
     Route::get('/tags/{id}', [UserController::class, 'tags']);
+    Route::get('/user/stats/{id}', [UserController::class, 'getDashboardStats']);
 
     //test sending email
     Route::get('/send-invite/{userId}', [UserController::class, 'sendEmail']);
@@ -27,6 +32,8 @@ Route::get('/test', function() {
 // Tags Routes
 Route::prefix('/tags')->group(function () {
     Route::get('/', [TagController::class, 'showTags']);
+    Route::get('/info', [TagController::class, 'keywordsTagsInfo']);
+    Route::get('/user/{userId}', [TagController::class, 'getUserTags']);
 });
 
 // Keywords Routes

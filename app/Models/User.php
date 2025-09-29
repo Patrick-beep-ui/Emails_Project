@@ -6,9 +6,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
+    use HasApiTokens, Notifiable;
     use HasFactory, Notifiable;
 
     protected $primaryKey = 'user_id';
@@ -23,6 +25,7 @@ class User extends Authenticatable
     public function tags()
     {
         return $this->belongsToMany(Tag::class, 'user_tags', 'user_id', 'tag_id')
+                    ->withPivot('is_active', 'is_pending')
                     ->withTimestamps();
     }
 

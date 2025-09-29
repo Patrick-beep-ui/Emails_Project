@@ -339,7 +339,7 @@ class PromptController extends Controller
         try {
             $result = $this->ai->run('Filter_True_Articles_And_Generate_Summary', [
                 'news' => $translatedNews
-            ], 180);
+            ], 0);
 
             $rawText = $result['text'];
 
