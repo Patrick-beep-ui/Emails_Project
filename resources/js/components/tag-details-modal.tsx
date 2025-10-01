@@ -16,55 +16,6 @@ interface TagDetailsModalProps {
     onToggleSubscription: (tagId: string) => void
   }
 
-// Mock keywords data
-const mockKeywords: Record<string, string[]> = {
-  Technology: [
-    "artificial intelligence",
-    "machine learning",
-    "blockchain",
-    "cryptocurrency",
-    "quantum computing",
-    "neural networks",
-    "deep learning",
-    "robotics",
-    "automation",
-    "cloud computing",
-    "cybersecurity",
-    "data science",
-  ],
-  Business: ["startups", "IPO", "venture capital", "markets", "earnings", "merger", "acquisition", "stocks"],
-  Science: [
-    "climate change",
-    "space exploration",
-    "medical research",
-    "genetics",
-    "physics",
-    "chemistry",
-    "biology",
-    "astronomy",
-    "environmental science",
-    "neuroscience",
-    "biotechnology",
-    "renewable energy",
-    "sustainability",
-    "conservation",
-    "research",
-  ],
-  Sports: ["NBA", "NFL", "soccer", "olympics", "championship", "playoffs"],
-  Politics: [
-    "elections",
-    "policy",
-    "congress",
-    "senate",
-    "legislation",
-    "government",
-    "democracy",
-    "voting",
-    "campaign",
-    "political",
-  ],
-}
-
 export function TagDetailsModal({ tag, isOpen, onClose, onToggleSubscription }: TagDetailsModalProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [newKeyword, setNewKeyword] = useState("")

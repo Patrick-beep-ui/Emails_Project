@@ -12,6 +12,10 @@ import { TagsIcon, NewspaperIcon, KeyIcon, LogOutIcon, UserIcon, SettingsIcon } 
 
 
 import { TagList } from "@/components/tags-list"
+import { MyNews } from "@/components/news-list"
+
+import Users from "./Users"
+
 import { SubscribedTagsCard } from "@/components/SubscribedTags"
 import { getUserStats } from "@/services/usersService"
 
@@ -211,6 +215,14 @@ export default function Dashboard() {
                 >
                   My News
                 </button>
+                <button
+                  onClick={() => setActiveView("users")}
+                  className={`text-sm transition-colors ${
+                    activeView === "users" ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Users
+                </button>
               </nav>
             </div>
             <div className="flex items-center space-x-4">
@@ -296,54 +308,23 @@ export default function Dashboard() {
         )}
 
 
-        {activeView === "news" && (
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-2xl font-light mb-2">My News</h2>
-              <p className="text-muted-foreground">
-                Recent articles delivered to your inbox
-                {filteredArticles.length !== mockArticles.length &&
-                  ` (${filteredArticles.length} of ${mockArticles.length} articles)`}
-              </p>
-            </div>
-
-            {/* Filters */}
-            <NewsFilters
-              selectedTags={selectedTagFilters}
-              onTagToggle={toggleTagFilter}
+          {activeView === "news" && (
+            <MyNews
+            user={user}
+              filteredArticles={filteredArticles}
+              selectedTagFilters={selectedTagFilters}
               searchTerm={searchTerm}
+              onTagToggle={toggleTagFilter}
               onSearchChange={setSearchTerm}
               onClearFilters={clearFilters}
+              onBookmark={handleBookmark}
+              onShare={handleShare}
             />
+          )}
 
-            {/* Articles */}
-            <div className="space-y-6">
-              {filteredArticles.length > 0 ? (
-                filteredArticles.map((article) => (
-                  <NewsArticleCard
-                    key={article.id}
-                    article={article}
-                    onBookmark={handleBookmark}
-                    onShare={handleShare}
-                  />
-                ))
-              ) : (
-                <Card className="border-border/50">
-                  <CardContent className="p-12 text-center">
-                    <div className="space-y-2">
-                      <h3 className="text-lg font-medium">No articles found</h3>
-                      <p className="text-muted-foreground">
-                        Try adjusting your search terms or filters to see more articles.
-                      </p>
-                      <Button variant="outline" onClick={clearFilters} className="mt-4 bg-transparent">
-                        Clear all filters
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-          </div>
+
+        {activeView === "users" && (
+          <Users />
         )}
       </main>
 

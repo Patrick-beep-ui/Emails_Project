@@ -26,15 +26,34 @@ class UserController extends Controller
     public function users()
     {
         try {
-            // Traer todos los usuarios con columnas específicas
-            $users = User::select('user_id', 'first_name', 'last_name', 'email', 'role')->get();
-
+            $users = User::select('user_id', 'first_name', 'last_name', 'email', 'role')
+                ->with(['tags' => function ($query) {
+                    $query->wherePivot('is_active', 1)
+                          ->select('tags.tag_id', 'tags.name'); 
+                }])
+                ->get()
+                ->map(function ($user) {
+                    return [
+                        'user_id'    => $user->user_id,
+                        'first_name' => $user->first_name,
+                        'last_name'  => $user->last_name,
+                        'email'      => $user->email,
+                        'role'       => $user->role,
+                        'tags'       => $user->tags->map(function ($tag) {
+                            return [
+                                'tag_id' => $tag->tag_id,
+                                'name'   => $tag->name,
+                                'status' => 'active', // because we filtered is_active
+                            ];
+                        })->values(), // clean array
+                    ];
+                });
+    
             return response()->json([
                 'users' => $users
             ], 200);
-
+    
         } catch (Exception $e) {
-            // Capturar cualquier error y devolver mensaje
             return response()->json([
                 'success' => false,
                 'message' => 'Error getting users',
@@ -42,6 +61,7 @@ class UserController extends Controller
             ], 500);
         }
     }
+    
 
     public function add(Request $request)
     {
@@ -51,6 +71,8 @@ class UserController extends Controller
             'first_name' => 'required|string|max:255',
             'last_name'  => 'required|string|max:255',
             'email'      => 'required|string|email|max:255|unique:users',
+            'tags'       => 'sometimes|array',
+            'tags.*'     => 'integer|exists:tags,tag_id'
         ]);
     
         if ($validator->fails()) {
@@ -68,9 +90,14 @@ class UserController extends Controller
                 'last_name'  => $usersData['last_name'],
                 'email'      => $usersData['email'],
                 //'password'   => bcrypt($usersData['password']),
-                'password'   => 'test-password',
+                //'password'   => bycrypt(bin2hex(random_bytes(8))), // Random 16 char password
+                'password'   => bcrypt('password'), // Temporary fixed password
                 'role'       => 'user'
             ]);
+
+            if ($request->has('tags')) {
+                $user->tags()->attach($request->tags, ['is_active' => 1]);
+            }
     
             DB::commit();
     

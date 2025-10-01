@@ -9,7 +9,7 @@ class News extends Model
 {
     use HasFactory;
 
-    protected $primaryKey = 'news_id';
+    protected $primaryKey = 'new_id';
     protected $fillable = ['source_id','title', 'description', 'url', 'published_at'];
 
     public function sources() {
@@ -17,7 +17,7 @@ class News extends Model
     }
 
     public function emails() {
-        return $this->belongsToMany(Email::class, 'emails_content', 'new_id', 'email_id')
+        return $this->belongsToMany(Email::class, 'emails_content', 'news_id', 'email_id')
                     ->withTimestamps();
     }
 }

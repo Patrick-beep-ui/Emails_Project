@@ -159,7 +159,7 @@ class PromptController extends Controller
             foreach ($groupedQueries as $group) {
                 $result = $this->ai->run('Optimize_Queries_For_Browser_Search', [
                     'query' => $group['query']
-                ]);
+                ], 0);
                 $optimizedQueries[] = $result['text'];
             }
 
@@ -298,8 +298,11 @@ class PromptController extends Controller
     
             $rawText = $result['text'];
     
-            // strip markdown fences like ```json ... ```
-            $rawText = preg_replace('/^```(?:json)?|```$/m', '', trim($rawText));
+            // Strip markdown fences ```json ... ```
+            $rawText = preg_replace('/^```(?:json)?\s*|\s*```$/s', '', trim($rawText));
+    
+            // Remove control characters that break JSON
+            $rawText = preg_replace('/[\x00-\x1F\x7F]/u', '', $rawText);
     
             Log::info("Cleaned AI translation response: " . $rawText);
     
@@ -313,25 +316,24 @@ class PromptController extends Controller
             if (isset($decoded['list'][0]['news'])) {
                 return $decoded;
             } elseif (isset($decoded[0]['title'])) {
-                // Wrap into expected structure
                 return [
                     'list' => [
-                        [ 'news' => $decoded ]
+                        ['news' => $decoded]
                     ]
                 ];
             } else {
                 throw new Exception("Unexpected JSON structure from AI");
             }
         } catch (Exception $e) {
-            info("Translation Failed: ".$e->getMessage());
             Log::error("Translation failed: " . $e->getMessage());
             return [
                 'list' => [
-                    [ 'news' => [] ]
+                    ['news' => []]
                 ]
             ];
         }
     }
+    
 
     public function filterAndSummarizeModule(array $translatedNews)
     {
@@ -340,31 +342,46 @@ class PromptController extends Controller
             $result = $this->ai->run('Filter_True_Articles_And_Generate_Summary', [
                 'news' => $translatedNews
             ], 0);
-
+    
             $rawText = $result['text'];
-
-            // strip code fences if AI wraps JSON
+            Log::info("Raw AI response: " . $rawText);
+    
+            // Strip code fences if present
             $rawText = preg_replace('/^```(?:json)?|```$/m', '', trim($rawText));
+    
+            // Aggressive cleanup: remove any leading text before first '{' or '['
+            $firstBrace = strpos($rawText, '{');
+            if ($firstBrace !== false) {
+                $rawText = substr($rawText, $firstBrace);
+            }
+    
+            // Remove any trailing text after last '}' or ']'
+            $lastBrace = strrpos($rawText, '}');
+            if ($lastBrace !== false) {
+                $rawText = substr($rawText, 0, $lastBrace + 1);
+            }
+    
             Log::info("Cleaned AI filter/summary response: " . $rawText);
-
+    
             $decoded = json_decode($rawText, true);
-
+    
             if (json_last_error() !== JSON_ERROR_NONE) {
                 throw new Exception("Invalid JSON from summary step: " . json_last_error_msg());
             }
-
+    
             if (isset($decoded['processed_news'])) {
                 return $decoded['processed_news'];
             } else {
                 throw new Exception("Unexpected structure: missing 'processed_news'");
             }
-
+    
         } catch (Exception $e) {
-            info("Summary error: ".$e->getMessage());
+            Log::info("Summary error: ".$e->getMessage());
             Log::error("Summary step failed: " . $e->getMessage());
             return [];
         }
     }
+    
 
 
     public function viewCleanNews($tagId)

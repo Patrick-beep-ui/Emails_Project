@@ -16,7 +16,7 @@ class Email extends Model
     }
 
     public function news() {
-        return $this->belongsToMany(News::class, 'emails_content', 'email_id', 'new_id')
+        return $this->belongsToMany(News::class, 'emails_content', 'email_id', 'news_id')
                     ->withTimestamps();
     }
 }

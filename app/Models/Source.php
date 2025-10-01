@@ -10,7 +10,7 @@ class Source extends Model
     use HasFactory;
     protected $primaryKey = 'source_id';
     public $timestamps = false;
-    protected $fillable = ['source_domaim'];
+    protected $fillable = ['source_domain'];
 
     public function users() {
         return $this->belongsToMany(User::class, 'user_sources', 'source_id', 'user_id')

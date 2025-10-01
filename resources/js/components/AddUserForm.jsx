@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form";
 import { addUser } from "../services/usersService";
 
-export default function AddUserForm() {
+export default function AddForm() {
     const { register, handleSubmit, formState: {errors}, setError} = useForm({mode: "onChange"});
 
     const processData = async (data) => {

@@ -7,6 +7,7 @@ use App\Http\Controllers\KeywordsController;
 use App\Http\Controllers\TagController;
 use App\Http\Controllers\PromptController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\NewsController;
 
 // Login Routes
 Route::post('/login', [AuthController::class, 'login']);
@@ -53,4 +54,10 @@ Route::prefix('/prompts')->group(function() {
     Route::get('/search/{tagId}', [PromptController::class, 'searchNewsModule'] );
     Route::get('/generate/{tagId}', [PromptController::class, 'cleanNewsModule'] );
     Route::get('/view-clean/{tagId}', [PromptController::class, 'viewCleanNews']);
+});
+
+
+// News Routes
+Route::prefix('/news')->group(function() {
+    Route::get('/user/{userId}', [NewsController::class, 'getUserNews'] );
 });
