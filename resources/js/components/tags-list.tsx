@@ -1,20 +1,28 @@
 "use client"
 
-import { FC } from "react"
+import { FC, memo } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
-import { SettingsIcon, Tag } from "lucide-react"
+import { SettingsIcon, Tag, Loader2 } from "lucide-react"
 import { TagDetailsModal } from "./tag-details-modal"
+import { User } from "@/contexts/auth-context"
 
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { getTagsInfo } from "@/services/tagServices"
 
 export interface Keyword {
     id: string
     content: string
+  }
+
+  export interface Pivot {
+    user_id: string
+    tag_id: string
+    is_active: boolean
+    is_pending: boolean
   }
   
   export interface Tag {
@@ -22,40 +30,76 @@ export interface Keyword {
     name: string
     description: string
     subscribed: boolean
+    pending: boolean
     keywords_count?: number
     keywords?: Keyword[]
-    is_active?: boolean
-    is_pending?: boolean
+    pivot: Pivot
+  }
+
+  export interface UserWithTags extends User {
+    tags: Tag[]
   }
   
 
 interface TagListProps {
   toggleSubscription: (id: string) => void
+  user: UserWithTags
 }
 
-export const TagList: FC<TagListProps> = ({ toggleSubscription }) => {
+const tagCache = new Map<string, Tag[]>()
+
+const TagList: FC<TagListProps> = ({ toggleSubscription, user }) => {
+    const dataCache = useRef<Tag[] | null>(null);
     const [tagList, setTagList] = useState<Tag[]>([]);
     const [selectedTag, setSelectedTag] = useState<Tag | null>(null);
     const [isTagModalOpen, setIsTagModalOpen] = useState(false)
+    const [isLoading, setIsLoading] = useState(false);
+    const [hasLoaded, setHasLoaded] = useState(false); // mounted flag
 
       const openTagDetails = useCallback((tag: Tag) => {
         setSelectedTag(tag)
         setIsTagModalOpen(true)
-      },[selectedTag, isTagModalOpen])
+      },[])
 
     useEffect(() => {
+      if (!user) return;
+
+      /*
+        if (tagCache.has(user.user_id)) {
+          setTagList(tagCache.get(user.user_id)!)
+          console.log("Using cached tags")
+          return
+        }
+          */
+
         const getTags = async () => {
+          setIsLoading(true);
           try {
             const response = await getTagsInfo(); 
-            setTagList(response.data.tags);
-            console.log("Fetched tags:", response.data.tags);
+
+            // Merge subscription status from user tags
+            const subscribedTags = response.data.tags.map((tag: Tag) => {
+              const userTagPivot = user.tags.find((t) => t.tag_id === tag.tag_id)?.pivot;
+      
+              return {
+                ...tag,
+                subscribed: !!userTagPivot?.is_active,   
+                pending: !!userTagPivot?.is_pending,
+              };
+            });
+
+            setTagList(subscribedTags);
+            tagCache.set(user.user_id, subscribedTags)
           } catch (e) {
             console.error("Failed to fetch tags:", e);
+          } finally {
+            setIsLoading(false);
+            setHasLoaded(true);
           }
         };
       
         getTags();
-      }, []);
+      }, [user]);
       
 
       const renderKeywords = useCallback((tag: Tag, maxDisplay: number = 3) => {
@@ -82,6 +126,11 @@ export const TagList: FC<TagListProps> = ({ toggleSubscription }) => {
       
 
   return (
+    isLoading ? (
+      <div className="flex items-center justify-center h-32">
+        <Loader2 className="animate-spin h-6 w-6 text-muted-foreground" />
+      </div>
+    ) : (
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-light mb-2">News Categories</h2>
@@ -96,7 +145,9 @@ export const TagList: FC<TagListProps> = ({ toggleSubscription }) => {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg font-light">{tag.name}</CardTitle>
-                <Switch checked={tag.subscribed} onCheckedChange={() => toggleSubscription(tag.tag_id)} />
+                <Switch 
+                checked={tag.subscribed}
+                />
               </div>
               <CardDescription>{tag.keywords_count} keywords tracked</CardDescription>
             </CardHeader>
@@ -121,10 +172,13 @@ export const TagList: FC<TagListProps> = ({ toggleSubscription }) => {
         isOpen={isTagModalOpen}
         onClose={() => setIsTagModalOpen(false)}
         onToggleSubscription={toggleSubscription}
+        user={user}
       />
     </div>
 
-    
+      )
   )
   
 }
+
+export default memo(TagList)

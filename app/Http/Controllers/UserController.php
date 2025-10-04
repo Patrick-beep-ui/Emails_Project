@@ -10,7 +10,9 @@ use App\Models\User;
 use App\Models\Tag;
 use App\Models\Keyword;
 use App\Mail\UserInviteMail;
+
 use Illuminate\Support\Facades\Mail;
+use Carbon\Carbon;
 use Exception;
 
 class UserController extends Controller
@@ -166,24 +168,33 @@ class UserController extends Controller
     }
 
     public function sendEmail($userId) {
-        $user = User::find($userId);
+        try {
+            $user = User::find($userId);
 
-        if (!$user) {
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User not found'
+                ], 404);
+            }
+    
+            $name = $user->first_name;
+            $link = url("/users");
+    
+            Mail::to($user->email)->send(new UserInviteMail($name, $link));
+    
+            return response()->json([
+                'success' => true,
+                'message' => 'Email sent successfully'
+            ], 200);
+        }
+        catch(Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'User not found'
-            ], 404);
+                'message' => 'Error sending email',
+                'error'   => $e->getMessage()
+            ], 500);
         }
-
-        $name = $user->first_name;
-        $link = url("/users");
-
-        Mail::to($user->email)->send(new UserInviteMail($name, $link));
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Email sent successfully'
-        ], 200);
     }
 
     public function getDashboardStats($userId)
@@ -205,19 +216,22 @@ class UserController extends Controller
                       ->where('is_active', 1);
             })->count();
 
-            /*
-            // Articles this week (last 7 days)
-            $articlesThisWeek = DB::table('articles')
-                ->whereBetween('created_at', [now()->subDays(7), now()])
+            // Articles received in the last 7 days
+            $newsThisWeek = DB::table('news as n')
+                ->join('emails_content as ec', 'ec.news_id', '=', 'n.new_id')
+                ->join('emails as e', 'e.email_id', '=', 'ec.email_id')
+                ->join('users as u', 'e.recipient', '=', 'u.user_id')
+                ->where('u.user_id', $userId)
+                ->whereBetween('n.created_at', [Carbon::now()->subDays(7), Carbon::now()])
                 ->count();
-            */
+            
 
             return response()->json([
                 'stats' => [
                     'activeSubscriptions' => $activeSubscriptions,
                     'availableTags' => $availableTags,
                     'keywordsTracked' => $keywordsTracked,
-                    //'articlesThisWeek' => $articlesThisWeek,
+                    'newsThisWeek' => $newsThisWeek,
                 ],
             ]);
         } catch (Exception $e) {
@@ -228,5 +242,36 @@ class UserController extends Controller
             ]);
         }
     }
+    public function showTagRequests() {
+        try {
+            $requests = DB::table('user_tags')
+                ->join('users', 'user_tags.user_id', '=', 'users.user_id')
+                ->join('tags', 'user_tags.tag_id', '=', 'tags.tag_id')
+                ->where('user_tags.is_pending', 1)
+                ->get([
+                    'user_tags.id',
+                    'tags.tag_id',
+                    'tags.name',
+                    'tags.description',
+                    'users.user_id',
+                    'users.first_name',
+                    'users.last_name',
+                    'users.email',
+                    'user_tags.created_at',
+                ]);
+    
+            return response()->json([
+                'requests' => $requests
+            ]);
+        }
+        catch(Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error getting tag requests',
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+    
 
 }

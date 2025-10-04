@@ -19,6 +19,7 @@ Route::prefix('/users')->group(function() {
     Route::post('/add', [UserController::class, 'add']);
     Route::get('/tags/{id}', [UserController::class, 'tags']);
     Route::get('/user/stats/{id}', [UserController::class, 'getDashboardStats']);
+    Route::get('/subscriptions/requests', [UserController::class, 'showTagRequests']);
 
     //test sending email
     Route::get('/send-invite/{userId}', [UserController::class, 'sendEmail']);
@@ -35,6 +36,10 @@ Route::prefix('/tags')->group(function () {
     Route::get('/', [TagController::class, 'showTags']);
     Route::get('/info', [TagController::class, 'keywordsTagsInfo']);
     Route::get('/user/{userId}', [TagController::class, 'getUserTags']);
+    Route::post('/subscription/request', [TagController::class, 'requestSubscription']);
+    Route::post('/subscription/approve', [TagController::class, 'approveSubscription']);
+    //Route::post('/subscription/reject', [TagController::class, 'rejectSubscription']);
+    Route::post('/toggle-status', [TagController::class, 'toggleTagStatus']);
 });
 
 // Keywords Routes

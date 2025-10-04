@@ -33,7 +33,8 @@ class AuthController extends Controller
 
     public function user(Request $request)
     {
-        return response()->json($request->user());
+        $user = $request->user()->load('tags'); 
+        return response()->json($user);
     }
 
     public function logout(Request $request)

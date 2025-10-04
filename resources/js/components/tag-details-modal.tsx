@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo, useCallback } from "react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -8,35 +8,69 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { SearchIcon, PlusIcon, XIcon } from "lucide-react"
 import { Tag, Keyword } from "./tags-list"
+import { requestSubscription } from "@/services/tagServices"
+import { User } from "@/contexts/auth-context"
 
 interface TagDetailsModalProps {
     tag: Tag | null
+    user: User | null
     isOpen: boolean
     onClose: () => void
     onToggleSubscription: (tagId: string) => void
   }
 
-export function TagDetailsModal({ tag, isOpen, onClose, onToggleSubscription }: TagDetailsModalProps) {
+export function TagDetailsModal({ tag, isOpen, onClose, onToggleSubscription, user }: TagDetailsModalProps) {
   const [searchTerm, setSearchTerm] = useState("")
-  const [newKeyword, setNewKeyword] = useState("")
-
-  if (!tag) return null
-
-  const keywords: Keyword[] = tag.keywords || []
-  const filteredKeywords = keywords.filter((keyword) => keyword.content.toLowerCase().includes(searchTerm.toLowerCase()))
-
-  const handleAddKeyword = () => {
-    if (newKeyword.trim()) {
-      // In a real app, this would make an API call
-      console.log("Adding keyword:", newKeyword)
-      setNewKeyword("")
-    }
-  }
+  const [loading, setLoading] = useState(false);
 
   const handleRemoveKeyword = (keyword: string) => {
     // In a real app, this would make an API call
     console.log("Removing keyword:", keyword)
   }
+
+  const handleRequestSubscription = useCallback(async () => {
+    try {
+      if (!user || !tag) {
+        console.error("User or tag not available");
+        return;
+      }
+
+      setLoading(true)
+
+      if (tag.subscribed) {
+        console.log("Unsubscribe flow not implemented yet for tag:", tag.tag_id)
+        // await unsubscribeFromTag({ user_id: user.user_id, tag_id: tag.tag_id })
+        return
+      }
+  
+      // Send as a single object
+      const response = await requestSubscription({
+        user_id: user.user_id,
+        tag_id: tag.tag_id
+      });
+  
+      console.log("Subscription request response:", response.data);
+  
+    } catch (e) {
+      console.error("Subscription request failed:", e);
+    } finally {
+      setLoading(false)
+    }
+  }, [tag, user]);
+
+  const keywords: Keyword[] = useMemo(() => {
+    return tag?.keywords || []
+  }, [tag])
+
+  const filteredKeywords = useMemo(() => {
+    return keywords.filter((keyword) =>
+      keyword.content.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  }, [keywords, searchTerm])
+
+  
+  if (!tag) return null
+  
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -59,10 +93,11 @@ export function TagDetailsModal({ tag, isOpen, onClose, onToggleSubscription }: 
                 </div>
                 <Button
                   variant={tag.subscribed ? "destructive" : "default"}
-                  onClick={() => onToggleSubscription(tag.tag_id)}
+                  onClick={() => handleRequestSubscription()}
                   className="shrink-0"
+                  disabled={tag.pending || loading}
                 >
-                  {tag.subscribed ? "Unsubscribe" : "Subscribe"}
+                  {loading ? "Processing..." : tag.pending ? "Pending" : tag.subscribed ? "Unsubscribe" : "Subscribe"}
                 </Button>
               </div>
             </CardHeader>

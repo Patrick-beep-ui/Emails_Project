@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react"
-import { getUsers } from "../services/usersService"
+import { getUsers, getUserRequests } from "../services/usersService"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { TagsIcon, NewspaperIcon, KeyIcon, LogOutIcon, UserIcon, SettingsIcon, UsersIcon, UserPlusIcon } from "lucide-react"
+import { TagsIcon, NewspaperIcon, KeyIcon, LogOutIcon, UserIcon, SettingsIcon, UsersIcon, UserPlusIcon, BellIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { AddUserModal } from "@/components/add-user-modal"
+import { SubscriptionRequestsModal } from "@/components/subscription-request-modal"
 
 // Define a type for your user object
 interface UserType {
@@ -15,39 +16,71 @@ interface UserType {
   tags: Subscription[]
 }
 
-interface Subscription {
+export interface Subscription {
+  id: number
   tag_id: number
   name: string
-  status: string
+  description: string
+  user_id: number
+  first_name: string
+  last_name: string
+  email: string
+  created_at: string
 } 
 
-// Optionally, define the API response type
+// Define the API response type
 interface GetUsersResponse {
   users: UserType[]
 }
 
 export default function Users() {
   const [users, setUsers] = useState<UserType[]>([])
+  const [subscriptionRequests, setSubscriptionRequests] = useState<Subscription[]>([]) // Define a proper type 
+  const [pendingRequestsCount, setPendingRequestsCount] = useState(0) // Example count
   const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false)
+  const [isRequestsModalOpen, setIsRequestsModalOpen] = useState(false)
 
   const handleUserAdded = () => {
     console.log("User added successfully, refreshing list...")
   }
 
-  useEffect(() => {
-    const getUsersData = async () => {
-      try {
-        const response = await getUsers()
-        const data: GetUsersResponse = response.data
-        setUsers(data.users)
-        console.log(data.users)
-      } catch (e) {
-        console.error(e)
-      }
-    }
+  const handleApproveRequest = (requestId: number) => {
+    console.log("Approved request:", requestId)
+    // Update state accordingly
+  }
 
-    getUsersData()
+  const handleDeclineRequest = (requestId: number) => {
+    console.log("Declined request:", requestId)
+    // Update state accordingly
+  }
+
+  const fetchUsers = async () => {
+    try {
+      const response = await getUsers()
+      const data: GetUsersResponse = response.data
+      setUsers(data.users)
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  const fetchUserRequests = async () => {
+    try {
+      const response = await getUserRequests()
+      const data = response.data
+      setSubscriptionRequests(data.requests || [])
+      setPendingRequestsCount((data.requests || []).length) 
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  useEffect(() => {
+    fetchUsers()
+    fetchUserRequests()
   }, [])
+
+
 
   return (
     <div className="space-y-6">
@@ -56,9 +89,28 @@ export default function Users() {
           <h2 className="text-2xl font-light mb-2">System Users</h2>
           <p className="text-muted-foreground">Manage all users and their subscription status</p>
         </div>
-        <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-          <UsersIcon className="h-4 w-4" />
-          <span>{users.length} total users</span>
+        <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+            <UsersIcon className="h-4 w-4" />
+            <span>{users.length} total users</span>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setIsRequestsModalOpen(true)}
+          className="relative bg-transparent"
+        >
+          <BellIcon className="h-4 w-4 mr-2" />
+            Requests
+            {pendingRequestsCount > 0 && (
+              <Badge
+                variant="destructive"
+                className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs"
+              >
+                {pendingRequestsCount}
+              </Badge>
+            )}
+        </Button>
         </div>
       </div>
 
@@ -140,6 +192,13 @@ export default function Users() {
         onClose={() => setIsAddUserModalOpen(false)}
         onAddUser={handleUserAdded}
     />
+    <SubscriptionRequestsModal
+        isOpen={isRequestsModalOpen}
+        onClose={() => setIsRequestsModalOpen(false)}
+        requests={subscriptionRequests}
+        onApprove={handleApproveRequest}
+        onDecline={handleDeclineRequest}
+      />
     </div>
   )
 }

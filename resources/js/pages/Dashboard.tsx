@@ -11,7 +11,7 @@ import { NewsArticleCard } from "@/components/news-article-card"
 import { TagsIcon, NewspaperIcon, KeyIcon, LogOutIcon, UserIcon, SettingsIcon } from "lucide-react"
 
 
-import { TagList } from "@/components/tags-list"
+import TagList  from "@/components/tags-list"
 import { MyNews } from "@/components/news-list"
 
 import Users from "./Users"
@@ -105,6 +105,7 @@ interface Stats {
   activeSubscriptions: number;
   availableTags: number;
   keywordsTracked: number;
+  newsThisWeek: number;
 }
 
 export default function Dashboard() {
@@ -117,6 +118,7 @@ export default function Dashboard() {
     activeSubscriptions: 0,
     availableTags: 0,
     keywordsTracked: 0,
+    newsThisWeek: 0,
   });
   
 
@@ -215,6 +217,8 @@ export default function Dashboard() {
                 >
                   My News
                 </button>
+                {/* Admin view - only show if user is admin */}
+                {user?.role == 'admin' && (
                 <button
                   onClick={() => setActiveView("users")}
                   className={`text-sm transition-colors ${
@@ -223,6 +227,7 @@ export default function Dashboard() {
                 >
                   Users
                 </button>
+                )}
               </nav>
             </div>
             <div className="flex items-center space-x-4">
@@ -285,15 +290,14 @@ export default function Dashboard() {
                   <NewspaperIcon className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-light">24</div>
-                  <p className="text-xs text-muted-foreground">+12% from last week</p>
+                  <div className="text-2xl font-light">{stats.newsThisWeek}</div>
+                  <p className="text-xs text-muted-foreground">Weekly summary</p>
                 </CardContent>
               </Card>
             </div>
 
             {/* Subscribed Tags */}
             <SubscribedTagsCard 
-              toggleSubscription={toggleSubscription} 
               openTagDetails={openTagDetails} 
               user={user}
             />
@@ -304,6 +308,7 @@ export default function Dashboard() {
         {activeView === "tags" && (
           <TagList
             toggleSubscription={toggleSubscription}
+            user={user}
           />
         )}
 
@@ -322,7 +327,7 @@ export default function Dashboard() {
             />
           )}
 
-
+        
         {activeView === "users" && (
           <Users />
         )}

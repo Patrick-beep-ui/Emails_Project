@@ -8,7 +8,8 @@ export interface User {
   user_id: string
   email: string
   first_name: string
-  last_name: string
+  last_name: string,
+  role: string
 }
 
 interface AuthContextType {
@@ -26,14 +27,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // check for existing session
-    const savedUser = localStorage.getItem("user")
-    const token = localStorage.getItem("token")
-    if (savedUser && token) {
-      setUser(JSON.parse(savedUser))
-      api.defaults.headers.common['Authorization'] = `Bearer ${token}`
+    const loadUser = async () => {
+      const token = localStorage.getItem("token")
+      if (token) {
+        api.defaults.headers.common['Authorization'] = `Bearer ${token}`
+        try {
+          const { data } = await api.get('/user') // get latest user with tags
+          setUser(data)
+          localStorage.setItem('user', JSON.stringify(data))
+        } catch (err) {
+          console.error("Failed to load user", err)
+          setUser(null)
+          localStorage.removeItem('user')
+          localStorage.removeItem('token')
+        }
+      }
+      setLoading(false)
     }
-    setLoading(false)
+
+    loadUser()
   }, [])
 
   const login = async (email: string, password: string) => {
