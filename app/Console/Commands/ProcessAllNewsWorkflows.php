@@ -140,8 +140,8 @@ class ProcessAllNewsWorkflows extends Command
         foreach ($userNewsAccumulator as $email => $articles) {
             if (empty($articles)) continue;
 
-            $htmlContent = $this->promptController->generateNewsHtml($articles, "Your News Bundle");
-            Mail::to($email)->send(new SendNewsEmail($htmlContent, "Your News Bundle"));
+            $htmlContent = $this->promptController->generateNewsHtml($articles, "Top News");
+            Mail::to($email)->send(new SendNewsEmail($htmlContent, "Top News"));
 
             $this->info("Email sent to $email with " . count($articles) . " articles.");
         }
