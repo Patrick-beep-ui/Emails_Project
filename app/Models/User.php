@@ -37,4 +37,8 @@ class User extends Authenticatable
     public function emails() {
         return $this->hasMany(Email::class, 'recipient', 'user_id');
     }
+
+    public function ccRecipients() {
+        return $this->hasMany(CcRecipient::class, 'user_id', 'user_id');
+    }
 }

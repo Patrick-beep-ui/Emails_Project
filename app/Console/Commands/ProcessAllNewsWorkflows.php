@@ -9,6 +9,7 @@ use App\Mail\SendNewsEmail;
 use Illuminate\Support\Facades\Mail;
 use App\Models\Tag;
 use App\Models\User;
+use App\Models\CcRecipient;
 use Exception;
 
 class ProcessAllNewsWorkflows extends Command
@@ -141,7 +142,14 @@ class ProcessAllNewsWorkflows extends Command
             if (empty($articles)) continue;
 
             $htmlContent = $this->promptController->generateNewsHtml($articles, "Top News");
-            Mail::to($email)->send(new SendNewsEmail($htmlContent, "Top News"));
+
+            $ccRecipients = CcRecipient::where('user_id', function($query) use ($email) {
+                $query->select('user_id')->from('users')->where('email', $email);
+            })->pluck('email_address')->toArray();
+
+            Mail::to($email)
+            ->cc($ccRecipients)
+            ->send(new SendNewsEmail($htmlContent, "Top News"));
 
             $this->info("Email sent to $email with " . count($articles) . " articles.");
         }

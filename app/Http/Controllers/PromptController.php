@@ -442,7 +442,7 @@ class PromptController extends Controller
         <body style=\"background-color: #f8fafc; color: #1e293b; line-height: 1.6; padding: 2rem 1rem; margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;\">
             <div style=\"max-width: 1200px; margin: 0 auto;\">
                 <header style=\"text-align: center; margin-bottom: 2.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid #e2e8f0;\">
-                    <h1 style=\"font-size: 2.25rem; color: #2563eb; margin-bottom: 0.5rem;\">{$newsTitle}s</h1>
+                    <h1 style=\"font-size: 2.25rem; color: #2563eb; margin-bottom: 0.5rem;\">{$newsTitle}</h1>
                     <div style=\"color: #64748b; font-size: 1rem; margin-bottom: 1rem;\">{$fechaHoy}</div>
                 </header>
 

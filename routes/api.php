@@ -8,6 +8,7 @@ use App\Http\Controllers\TagController;
 use App\Http\Controllers\PromptController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\NewsController;
+use App\Http\Controllers\CCRecipientsController;
 
 // Login Routes
 Route::post('/login', [AuthController::class, 'login']);
@@ -65,4 +66,10 @@ Route::prefix('/prompts')->group(function() {
 // News Routes
 Route::prefix('/news')->group(function() {
     Route::get('/user/{userId}', [NewsController::class, 'getUserNews'] );
+});
+
+// CC Recipients
+Route::prefix('/recipients')->group(function() {
+    Route::get('/{userId}', [CCRecipientsController::class, 'show']);
+    Route::post('/add', [CCRecipientsController::class, 'add']);
 });

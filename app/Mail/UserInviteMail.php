@@ -12,16 +12,25 @@ class UserInviteMail extends Mailable
 
     public $name;
     public $link;
+    public $ccRecipients;
 
-    public function __construct($name, $link)
+    public function __construct(string $name, string $link, array $ccRecipients)
     {
         $this->name = $name;
         $this->link = $link;
+        $this->ccRecipients = $ccRecipients;
     }
 
     public function build()
     {
-        return $this->subject("Set Your Password")
-                    ->view('emails.user_invite'); // Blade template
+        $email = $this->subject("Set Your Password")
+                    ->view('emails.user_invite'); 
+
+         if (!empty($this->ccRecipients)) {
+            $email->cc($this->ccRecipients);
+        }
+
+        return $email;
+
     }
 }

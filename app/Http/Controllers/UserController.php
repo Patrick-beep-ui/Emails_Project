@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use App\Models\Tag;
 use App\Models\Keyword;
+use App\Models\CcRecipient;
+
 use App\Mail\UserInviteMail;
 
 use Illuminate\Support\Facades\Mail;
@@ -180,8 +182,12 @@ class UserController extends Controller
     
             $name = $user->first_name;
             $link = url("/users");
+
+            $recipients = CcRecipient::where('user_id', $userId)->get();
+
+            $ccEmails = $recipients->pluck('email_address')->toArray();
     
-            Mail::to($user->email)->send(new UserInviteMail($name, $link));
+            Mail::to($user->email)->send(new UserInviteMail($name, $link, $ccEmails));
     
             return response()->json([
                 'success' => true,

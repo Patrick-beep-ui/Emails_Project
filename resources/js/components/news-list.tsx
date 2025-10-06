@@ -10,6 +10,8 @@ import { NewsArticleCard } from "@/components/news-article-card"
 import { getUserNews } from "@/services/newsServices"
 import { Tag } from "./tags-list"
 
+import { ArrowUpIcon } from "lucide-react"
+
 interface News {
   news_id: number
   news_title: string
@@ -61,20 +63,34 @@ export const MyNews: FC<MyNewsProps> = ({
   onShare
 }) => {
   const [newsData, setNewsData] = useState<News[]>([])
+  const [currentPage, setCurrentPage] = useState(1);
+  const [lastPage, setLastPage] = useState(1);
+  const [showScrollTop, setShowScrollTop] = useState(false);
 
   useEffect(() => {
     const fetchNews = async () => {
       try {
-        const response = await getUserNews(user.user_id)
-        setNewsData(response.data.news)
-        console.log("Fetched news:", response.data.news)
+        const response = await getUserNews(user.user_id, currentPage)
+        setNewsData(response.data.news.data);
+        setLastPage(response.data.news.last_page);
       } catch (e) {
         console.error("Failed to fetch news:", e)
       }
     }
 
     fetchNews()
-  }, [user.user_id])
+  }, [user.user_id, currentPage])
+
+  // Scroll to top
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 300);
+    };
+  
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+  
 
   const articles: Article[] = newsData
     .map((newsItem) => ({
@@ -109,6 +125,36 @@ export const MyNews: FC<MyNewsProps> = ({
           Recent articles delivered to your inbox
           {newsData.length !== 0 && ` (${newsData.length} news)`}
         </p>
+      </div>
+
+            {/* Pagination Buttons */}
+            <div className="flex justify-center items-center space-x-2 mt-4">
+        <Button
+          size="sm"
+          disabled={currentPage === 1}
+          onClick={() => setCurrentPage(currentPage - 1)}
+        >
+          Previous
+        </Button>
+
+        {Array.from({ length: lastPage }, (_, i) => i + 1).map((page) => (
+          <Button
+            key={page}
+            size="sm"
+            variant={page === currentPage ? "default" : "outline"}
+            onClick={() => setCurrentPage(page)}
+          >
+            {page}
+          </Button>
+        ))}
+
+        <Button
+          size="sm"
+          disabled={currentPage === lastPage}
+          onClick={() => setCurrentPage(currentPage + 1)}
+        >
+          Next
+        </Button>
       </div>
 
       {/* Filters */}
@@ -150,7 +196,18 @@ export const MyNews: FC<MyNewsProps> = ({
             </CardContent>
           </Card>
         )}
+
+        {showScrollTop && (
+          <button
+            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+            className="fixed bottom-8 right-8 bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition-all z-50 cursor-pointer"
+          >
+            <ArrowUpIcon className="h-5 w-5" />
+          </button>
+        )}
+
       </div>
+
     </div>
   )
 }

@@ -68,6 +68,7 @@ class NewsController extends Controller
                     [
                         'title' => $newsItem['title'] ?? null,
                         'description' => $description,
+                        'tag_name' => $tagTitle,
                         'source_id' => $source->source_id,
                         'published_at' => $publishedAt,
                     ]
@@ -82,8 +83,8 @@ class NewsController extends Controller
     
                 $mail = Email::create([
                     'recipient' => $user->user_id,
-                    'subject' => $tagTitle,
-                    'message' => 'Top News',
+                    'subject' => 'Top News',
+                    'message' => 'News Bundle from all user tags',
                     'status' => 'sent',
                 ]);
     
@@ -118,15 +119,14 @@ class NewsController extends Controller
                 ->join('emails_content as ec', 'ec.news_id', '=', 'n.new_id')
                 ->join('emails as e', 'e.email_id', '=', 'ec.email_id')
                 ->join('sources as s', 's.source_id', '=', 'n.source_id')
-                ->join('users as u', 'u.user_id', '=', 'e.recipient')
-                ->where('u.user_id', $userId)
+                ->where('e.recipient', $userId)
                 ->select(
                     'n.new_id as news_id', 'n.title as news_title',
                     'n.description as news_description',
                     'n.url as news_url',
                     'n.published_at as news_date',
                     's.source_domain as news_domain',
-                    'e.subject as news_category'
+                    'n.tag_name AS news_category'
                 )
                 ->groupBy(
                     'n.new_id', 'n.title',
@@ -134,10 +134,10 @@ class NewsController extends Controller
                     'n.url',
                     'n.published_at',
                     's.source_domain',
-                    'e.subject'
+                    'news_category'
                 )
                 ->orderBy('n.published_at', 'desc') // optional: latest news first
-                ->get();
+                ->paginate(25);
     
             return response()->json([
                 'news' => $news

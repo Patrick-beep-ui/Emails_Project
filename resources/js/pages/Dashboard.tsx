@@ -3,13 +3,10 @@ import { useState, useCallback, useEffect, useMemo } from "react"
 import { useAuth } from "@/contexts/auth-context"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Switch } from "@/components/ui/switch"
-import { TagDetailsModal } from "@/components/tag-details-modal"
-import { NewsFilters } from "@/components/news-filters"
-import { NewsArticleCard } from "@/components/news-article-card"
 import { TagsIcon, NewspaperIcon, KeyIcon, LogOutIcon, UserIcon, SettingsIcon } from "lucide-react"
 
+import { TagDetailsModal } from "@/components/tag-details-modal"
+import { EmailPreferencesModal } from "@/components/emails-preferences-modal"
 
 import TagList  from "@/components/tags-list"
 import { MyNews } from "@/components/news-list"
@@ -120,6 +117,7 @@ export default function Dashboard() {
     keywordsTracked: 0,
     newsThisWeek: 0,
   });
+  const [isEmailPreferencesOpen, setIsEmailPreferencesOpen] = useState(false)
   
 
   // News filtering state
@@ -235,6 +233,17 @@ export default function Dashboard() {
                 <UserIcon className="h-4 w-4" />
                 <span>{user?.email}</span>
               </div>
+
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsEmailPreferencesOpen(true)}
+                className="text-muted-foreground hover:text-foreground"
+                title="Email Preferences"
+              >
+                <SettingsIcon className="h-4 w-4" />
+              </Button>
+
               <Button
                 variant="ghost"
                 size="sm"
@@ -339,6 +348,13 @@ export default function Dashboard() {
         onClose={() => setIsTagModalOpen(false)}
         onToggleSubscription={toggleSubscription}
       />
+
+
+      <EmailPreferencesModal 
+      isOpen={isEmailPreferencesOpen} 
+      onClose={() => setIsEmailPreferencesOpen(false)}
+      user={user} />
+
     </div>
   )
 }

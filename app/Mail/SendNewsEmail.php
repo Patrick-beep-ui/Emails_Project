@@ -14,14 +14,16 @@ class SendNewsEmail extends Mailable
     use Queueable, SerializesModels;
 
     public string $htmlContent;
+    public array $ccRecipients;
 
     /**
      * Create a new message instance.
      */
-    public function __construct(string $htmlContent, string $subject = "Top News") 
+    public function __construct(string $htmlContent, string $subject = "Top News", array $ccRecipients = []) 
     {
         $this->htmlContent = $htmlContent;
         $this->subject($subject);
+        $this->ccRecipients = $ccRecipients;
     }
 
     /**
@@ -30,7 +32,13 @@ class SendNewsEmail extends Mailable
 
     public function build()
     {
-        return $this->subject($this->subject . " News")
-                    ->html($this->htmlContent);
+        $email = $this->subject($this->subject)
+        ->html($this->htmlContent);
+
+        if (!empty($this->ccRecipients)) {
+        $email->cc($this->ccRecipients);
+        }
+
+        return $email;
     }
 }
