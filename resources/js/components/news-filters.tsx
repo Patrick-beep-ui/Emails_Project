@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { SearchIcon, FilterIcon, XIcon } from "lucide-react"
 
 interface NewsFiltersProps {
+  availableTags: string[]
   selectedTags: string[]
   onTagToggle: (tag: string) => void
   searchTerm: string
@@ -15,9 +16,8 @@ interface NewsFiltersProps {
   onClearFilters: () => void
 }
 
-const availableTags = ["Technology", "Business", "Science", "Sports", "Politics"]
-
 export function NewsFilters({
+  availableTags,
   selectedTags,
   onTagToggle,
   searchTerm,

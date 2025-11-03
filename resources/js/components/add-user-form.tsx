@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { UserPlusIcon } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { getTags } from "@/services/tagServices"
 
 interface AddUserFormProps {
@@ -41,7 +41,7 @@ export default function AddUserForm({ onSuccess }: AddUserFormProps) {
     fetchTags()
   }, [])
 
-  const processData = async (data: any) => {
+  const processData = useCallback(async (data: any) => {
     try {
       const response = await addUser(data)
       console.log(response)
@@ -61,7 +61,7 @@ export default function AddUserForm({ onSuccess }: AddUserFormProps) {
         console.error(error)
       }
     }
-  }
+  }, [onSuccess, reset, setError])
 
   return (
     <form onSubmit={handleSubmit(processData)} className="space-y-6">

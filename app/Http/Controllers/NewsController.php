@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Http\Request;
+
 use App\Models\News;
 use App\Models\Source;
 use App\Models\Email;
@@ -112,10 +114,13 @@ class NewsController extends Controller
     }
 
 
-    public function getUserNews($userId)
+    public function getUserNews($userId, Request $request)
     {
         try {
-            $news = DB::table('news as n')
+            $month = $request->query('month');
+            $year = $request->query('year');
+
+            $query = DB::table('news as n')
                 ->join('emails_content as ec', 'ec.news_id', '=', 'n.new_id')
                 ->join('emails as e', 'e.email_id', '=', 'ec.email_id')
                 ->join('sources as s', 's.source_id', '=', 'n.source_id')
@@ -135,8 +140,14 @@ class NewsController extends Controller
                     'n.published_at',
                     's.source_domain',
                     'news_category'
-                )
-                ->orderBy('n.published_at', 'desc') // optional: latest news first
+                );
+
+                if ($month && $year) {
+                    $query->whereMonth('n.published_at', $month)
+                          ->whereYear('n.published_at', $year);
+                }
+            $news = $query
+                ->orderBy('n.published_at', 'desc') // latest news first
                 ->paginate(25);
     
             return response()->json([

@@ -41,4 +41,9 @@ class User extends Authenticatable
     public function ccRecipients() {
         return $this->hasMany(CcRecipient::class, 'user_id', 'user_id');
     }
+
+    public function savedNews(){
+        return $this->belongsToMany(News::class, 'saved_news', 'user_id', 'news_id')->withTimestamps();
+    }
+
 }

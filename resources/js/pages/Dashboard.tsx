@@ -49,53 +49,7 @@ const mockArticles = [
     url: "https://reuters.com/tesla-earnings-q4",
     readTime: "3 min read",
     imageUrl: "/tesla-stock-market-chart.jpg",
-  },
-  {
-    id: "3",
-    title: "NASA's James Webb Telescope Discovers Earth-Like Exoplanet",
-    snippet:
-      "Astronomers identify potentially habitable world just 22 light-years away with atmospheric conditions similar to Earth. The planet, designated K2-18b, shows signs of water vapor and possible cloud formations in its atmosphere.",
-    source: "Nature",
-    date: "6 hours ago",
-    tags: ["Science"],
-    url: "https://nature.com/webb-exoplanet-discovery",
-    readTime: "5 min read",
-    imageUrl: "/james-webb-telescope-space-discovery.jpg",
-  },
-  {
-    id: "4",
-    title: "Federal Reserve Signals Potential Interest Rate Cuts",
-    snippet:
-      "Central bank officials hint at monetary policy adjustments in response to cooling inflation data and economic indicators. Markets react positively to the prospect of lower borrowing costs.",
-    source: "Wall Street Journal",
-    date: "8 hours ago",
-    tags: ["Business"],
-    url: "https://wsj.com/fed-interest-rates",
-    readTime: "6 min read",
-  },
-  {
-    id: "5",
-    title: "Breakthrough in Quantum Computing Achieved by MIT Researchers",
-    snippet:
-      "Scientists demonstrate new quantum error correction method that could make quantum computers more practical for real-world applications. The technique reduces error rates by 90% compared to previous methods.",
-    source: "MIT Technology Review",
-    date: "12 hours ago",
-    tags: ["Technology", "Science"],
-    url: "https://technologyreview.com/quantum-breakthrough",
-    readTime: "7 min read",
-    imageUrl: "/quantum-computing-laboratory.png",
-  },
-  {
-    id: "6",
-    title: "Climate Summit Reaches Historic Agreement on Carbon Reduction",
-    snippet:
-      "World leaders commit to ambitious new targets for greenhouse gas emissions, with binding agreements for major economies. The deal includes significant funding for developing nations' clean energy transitions.",
-    source: "BBC News",
-    date: "1 day ago",
-    tags: ["Science", "Politics"],
-    url: "https://bbc.com/climate-summit-agreement",
-    readTime: "8 min read",
-  },
+  }
 ]
 
 interface Stats {

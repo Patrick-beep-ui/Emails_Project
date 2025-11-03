@@ -1,9 +1,10 @@
 "use client"
 
+import { useState, useEffect, useCallback } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { ExternalLinkIcon, BookmarkIcon, ShareIcon } from "lucide-react"
+import { ExternalLinkIcon, BookmarkIcon, ShareIcon, CheckIcon } from "lucide-react"
 
 interface NewsArticle {
   id: string
@@ -12,23 +13,32 @@ interface NewsArticle {
   source: string
   date: string
   tags: string[]
-  url?: string
+  url: string
   imageUrl?: string
   readTime?: string
+  isSaved?: boolean 
 }
 
 interface NewsArticleCardProps {
   article: NewsArticle
-  onBookmark?: (articleId: string) => void
+  onBookmark?: (articleId: string, currentlySaved: boolean) => void
   onShare?: (article: NewsArticle) => void
 }
 
 export function NewsArticleCard({ article, onBookmark, onShare }: NewsArticleCardProps) {
+  const [saved, setSaved] = useState(article.isSaved || false)
+
+  console.log(`Article ID: ${article.id}, isSaved: ${article.isSaved}`)
+
+  const handleBookmark = useCallback(() => {
+    setSaved(!saved)
+    onBookmark?.(article.id, saved)
+  }, [article.id, onBookmark, saved])
+
   return (
     <Card className="border-border/50 hover:border-border transition-all duration-200 hover:shadow-sm">
       <CardContent className="p-6">
         <div className="space-y-4">
-          {/* Header with image if available */}
           {article.imageUrl && (
             <div className="aspect-video rounded-lg overflow-hidden bg-muted">
               <img
@@ -39,7 +49,6 @@ export function NewsArticleCard({ article, onBookmark, onShare }: NewsArticleCar
             </div>
           )}
 
-          {/* Article Content */}
           <div className="space-y-3">
             <div className="flex items-start justify-between gap-4">
               <h3 className="text-lg font-medium text-balance leading-tight hover:text-primary transition-colors cursor-pointer">
@@ -48,18 +57,13 @@ export function NewsArticleCard({ article, onBookmark, onShare }: NewsArticleCar
               <div className="text-xs text-muted-foreground whitespace-nowrap">{article.date}</div>
             </div>
 
-            <p className="text-muted-foreground text-pretty leading-relaxed line-clamp-3">{article.snippet}</p>
+            <p className="text-muted-foreground text-pretty leading-relaxed line-clamp-3">
+              {article.snippet}
+            </p>
 
-            {/* Metadata */}
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
                 <span className="text-sm text-muted-foreground">{article.source}</span>
-                {article.readTime && (
-                  <>
-                    <span className="text-muted-foreground">•</span>
-                    <span className="text-sm text-muted-foreground">{article.readTime}</span>
-                  </>
-                )}
               </div>
               <div className="flex gap-1">
                 {article.tags.map((tag) => (
@@ -70,18 +74,27 @@ export function NewsArticleCard({ article, onBookmark, onShare }: NewsArticleCar
               </div>
             </div>
 
-            {/* Actions */}
             <div className="flex items-center justify-between pt-2 border-t border-border/30">
               <div className="flex items-center gap-2">
                 <Button
-                  variant="ghost"
+                  variant={saved ? "default" : "ghost"}
                   size="sm"
-                  onClick={() => onBookmark?.(article.id)}
-                  className="text-xs text-muted-foreground hover:text-foreground"
+                  onClick={handleBookmark}
+                  className={`text-xs ${
+                    saved ? "text-primary bg-primary/10 hover:bg-primary/20" : "text-muted-foreground hover:text-foreground"
+                  }`}
                 >
-                  <BookmarkIcon className="h-4 w-4 mr-1" />
-                  Save
+                  {saved ? (
+                    <>
+                      <CheckIcon className="h-4 w-4 mr-1" /> Saved
+                    </>
+                  ) : (
+                    <>
+                      <BookmarkIcon className="h-4 w-4 mr-1" /> Save
+                    </>
+                  )}
                 </Button>
+
                 <Button
                   variant="ghost"
                   size="sm"
@@ -92,7 +105,13 @@ export function NewsArticleCard({ article, onBookmark, onShare }: NewsArticleCar
                   Share
                 </Button>
               </div>
-              <Button variant="ghost" size="sm" className="text-xs text-primary hover:text-primary/80" asChild>
+
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs text-primary hover:text-primary/80"
+                asChild
+              >
                 <a href={article.url || "#"} target="_blank" rel="noopener noreferrer">
                   Read full article
                   <ExternalLinkIcon className="h-3 w-3 ml-1" />

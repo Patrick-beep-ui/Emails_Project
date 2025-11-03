@@ -10,10 +10,14 @@ use App\Models\User;
 use App\Models\Tag;
 use App\Models\Keyword;
 use App\Models\CcRecipient;
+use App\Models\PasswordResetToken;
 
 use App\Mail\UserInviteMail;
 
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
+use App\Mail\SetPasswordMail;
+use Illuminate\Support\Facades\Hash;
 use Carbon\Carbon;
 use Exception;
 
@@ -102,6 +106,8 @@ class UserController extends Controller
             if ($request->has('tags')) {
                 $user->tags()->attach($request->tags, ['is_active' => 1]);
             }
+
+            $this->sendInviteEmail($user->user_id);
     
             DB::commit();
     
@@ -223,13 +229,17 @@ class UserController extends Controller
             })->count();
 
             // Articles received in the last 7 days
+            $startOfWeek = Carbon::now()->startOfWeek(Carbon::MONDAY)->startOfDay();
+            $endOfWeek   = Carbon::now()->endOfWeek(Carbon::SUNDAY)->endOfDay();
+            
             $newsThisWeek = DB::table('news as n')
                 ->join('emails_content as ec', 'ec.news_id', '=', 'n.new_id')
                 ->join('emails as e', 'e.email_id', '=', 'ec.email_id')
                 ->join('users as u', 'e.recipient', '=', 'u.user_id')
                 ->where('u.user_id', $userId)
-                ->whereBetween('n.created_at', [Carbon::now()->subDays(7), Carbon::now()])
-                ->count();
+                ->whereBetween('n.created_at', [$startOfWeek, $endOfWeek])
+                ->distinct()
+                ->count('n.new_id');
             
 
             return response()->json([
@@ -279,5 +289,68 @@ class UserController extends Controller
         }
     }
     
+    public function sendInviteEmail($userId)
+    {
+        try {
+            $user = User::findOrFail($userId);
+
+            // Create token
+            $token = Str::random(64);
+    
+            PasswordResetToken::updateOrCreate(
+                ['user_id' => $user->user_id],
+                ['token' => $token, 'created_at' => now()]
+            );
+    
+            $url = config('app.url') . "/set-password?token={$token}"; 
+            // 👆 Example frontend route: http://localhost:5173/set-password?token=xxxx
+    
+            Mail::to($user->email)->send(new SetPasswordMail($user, $url));
+    
+            return response()->json(['message' => 'Set password email sent successfully']);
+        }
+        catch(Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error sending invite email',
+                'error'   => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function setPassword(Request $request)
+    {
+        try {
+            $request->validate([
+                'token' => 'required|string',
+                'password' => 'required|string|min:8',
+            ]);
+    
+            $record = PasswordResetToken::where('token', $request->token)->first();
+    
+            if (!$record || Carbon::parse($record->created_at)->addHours(24)->isPast()) {
+                return response()->json(['message' => 'Invalid or expired token'], 400);
+            }
+    
+            $user = User::find($record->user_id);
+            if (!$user) {
+                return response()->json(['message' => 'User not found'], 404);
+            }
+    
+            $user->update(['password' => Hash::make($request->password)]);
+    
+            // Delete the token after use
+            $record->delete();
+    
+            return response()->json(['message' => 'Password updated successfully']);
+        }
+        catch(Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error sending updating password',
+                'error'   => $e->getMessage()
+            ], 500);
+        }
+    }
 
 }

@@ -9,6 +9,7 @@ use App\Http\Controllers\PromptController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\CCRecipientsController;
+use App\Http\Controllers\SavedNewsController;
 
 // Login Routes
 Route::post('/login', [AuthController::class, 'login']);
@@ -23,7 +24,10 @@ Route::prefix('/users')->group(function() {
     Route::get('/subscriptions/requests', [UserController::class, 'showTagRequests']);
 
     //test sending email
-    Route::get('/send-invite/{userId}', [UserController::class, 'sendEmail']);
+    //Route::get('/send-email/{userId}', [UserController::class, 'sendEmail']);
+    Route::get('/send-invite/{userId}', [UserController::class, 'sendInviteEmail']);
+    Route::post('/set-password', [UserController::class, 'setPassword']);
+
 });
 
 Route::get('/test', function() {
@@ -72,4 +76,11 @@ Route::prefix('/news')->group(function() {
 Route::prefix('/recipients')->group(function() {
     Route::get('/{userId}', [CCRecipientsController::class, 'show']);
     Route::post('/add', [CCRecipientsController::class, 'add']);
+});
+
+//Saved News
+Route::prefix('saved-news')->group(function () {
+    Route::post('/save', [SavedNewsController::class, 'saveNews']);
+    Route::post('/unsave', [SavedNewsController::class, 'unsaveNews']);
+    Route::get('/user/{userId}', [SavedNewsController::class, 'getSavedNews']);
 });
