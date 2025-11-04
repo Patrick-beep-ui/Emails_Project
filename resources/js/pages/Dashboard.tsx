@@ -1,5 +1,5 @@
 "use client"
-import { useState, useCallback, useEffect, useMemo } from "react"
+import { useState, useCallback, useEffect, useMemo, memo } from "react"
 import { useAuth } from "@/contexts/auth-context"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -59,7 +59,7 @@ interface Stats {
   newsThisWeek: number;
 }
 
-export default function Dashboard() {
+function Dashboard() {
   const { user, logout } = useAuth()
   const [activeView, setActiveView] = useState("overview")
   const [tags, setTags] = useState(mockTags)
@@ -78,14 +78,24 @@ export default function Dashboard() {
   const [selectedTagFilters, setSelectedTagFilters] = useState<string[]>([])
   const [searchTerm, setSearchTerm] = useState("")
 
-  console.log("User data:", user)
+  useEffect(() => {
+    const getUserData = async () => {
+      try {
+        const response = await getUserStats(user?.user_id);
+        setStats(response.data.stats);
+      }
+      catch(e) {
+        console.error("Failed to fetch user stats:", e)
+      }
+    }
+
+    getUserData();
+  }, [user])
 
   
   const toggleSubscription = useCallback((tagId: string) => {
     setTags(tags.map((tag) => (tag.id === tagId ? { ...tag, subscribed: !tag.subscribed } : tag)))
   }, [tags]);
-
-  console.log("Tags on tag details", tags)
 
   const openTagDetails = useCallback((tag: (typeof mockTags)[0]) => {
     setSelectedTag(tag)
@@ -102,40 +112,28 @@ export default function Dashboard() {
     setSearchTerm("")
   }, [selectedTagFilters, searchTerm])
 
-  const filteredArticles = mockArticles.filter((article) => {
-    const matchesSearch =
-      searchTerm === "" ||
-      article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      article.snippet.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      article.source.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredArticles = useMemo(() => {
+    return mockArticles.filter((article) => {
+      const matchesSearch =
+        searchTerm === "" ||
+        article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        article.snippet.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        article.source.toLowerCase().includes(searchTerm.toLowerCase())
 
-    const matchesTags = selectedTagFilters.length === 0 || selectedTagFilters.some((tag) => article.tags.includes(tag))
+      const matchesTags =
+        selectedTagFilters.length === 0 || selectedTagFilters.some((tag) => article.tags.includes(tag))
 
-    return matchesSearch && matchesTags
-  })
+      return matchesSearch && matchesTags
+    })
+  }, [searchTerm, selectedTagFilters])
 
   const handleBookmark = useCallback((articleId: string) => {
     console.log("Bookmarking article:", articleId)
     // In a real app, this would make an API call
   }, [])
 
-  const handleShare = (article: (typeof mockArticles)[0]) => {
+  const handleShare = useCallback((article: (typeof mockArticles)[0]) => {
     console.log("Sharing article:", article.title)
-    // In a real app, this would open a share dialog
-  }
-
-  useEffect(() => {
-    const getUserData = async () => {
-      try {
-        const response = await getUserStats(user?.user_id);
-        setStats(response.data.stats);
-      }
-      catch(e) {
-        console.error("Failed to fetch user stats:", e)
-      }
-    }
-
-    getUserData();
   }, [])
 
 
@@ -315,3 +313,5 @@ export default function Dashboard() {
     </div>
   )
 }
+
+export default memo(Dashboard)

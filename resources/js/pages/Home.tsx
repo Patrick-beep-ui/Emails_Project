@@ -3,8 +3,9 @@
 import { useAuth } from "@/contexts/auth-context"
 import Login from "./Login"
 import Dashboard from "./Dashboard"
+import {memo} from "react"
 
-export default function Home() {
+function Home() {
   const { user, loading } = useAuth()
 
   if (loading) {
@@ -17,3 +18,5 @@ export default function Home() {
 
   return user ? <Dashboard /> : <Login />
 }
+
+export default memo(Home);

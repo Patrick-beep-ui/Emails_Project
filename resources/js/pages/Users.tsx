@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback, useMemo } from "react"
 import { getUsers, getUserRequests } from "../services/usersService"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { TagsIcon, NewspaperIcon, KeyIcon, LogOutIcon, UserIcon, SettingsIcon, UsersIcon, UserPlusIcon, BellIcon } from "lucide-react"
@@ -43,52 +43,57 @@ export default function Users() {
   const [selectedUser, setSelectedUser] = useState(null)
   const [isUserModalOpen, setIsUserModalOpen] = useState(false)
 
-  const handleUserAdded = () => {
-    fetchUsers()
-  }
+  const totalUsers = useMemo(() => users.length, [users])
 
-  const handleApproveRequest = async (requestId: number) => {
-    console.log("Approved request:", requestId)
-    await fetchUserRequests()
-    await fetchUsers()
-  }
-
-  const handleDeclineRequest = (requestId: number) => {
-    setSubscriptionRequests((prev) => prev.filter((r) => r.id !== requestId));
-    setPendingRequestsCount((prev) => prev - 1);
-  };  
-
-  const handleViewDetails = (user: any) => {
-    setSelectedUser(user)
-    setIsUserModalOpen(true)
-  }
-
-  const fetchUsers = async () => {
+    const fetchUsers = useCallback(async () => {
     try {
       const response = await getUsers()
       const data: GetUsersResponse = response.data
       setUsers(data.users)
     } catch (e) {
-      console.error(e)
+      console.error("Error fetching users:", e)
     }
-  }
+  }, [])
 
-  const fetchUserRequests = async () => {
+  const fetchUserRequests = useCallback(async () => {
     try {
       const response = await getUserRequests()
       const data = response.data
-      setSubscriptionRequests(data.requests || [])
-      setPendingRequestsCount((data.requests || []).length) 
+      const requests = data.requests || []
+      setSubscriptionRequests(requests)
+      setPendingRequestsCount(requests.length)
     } catch (e) {
-      console.error(e)
+      console.error("Error fetching requests:", e)
     }
-  }
+  }, [])
+
+  const handleUserAdded = useCallback(() => {
+    fetchUsers()
+  }, [fetchUsers])
+
+  const handleApproveRequest = useCallback(
+    async (requestId: number) => {
+      console.log("Approved request:", requestId)
+      await fetchUserRequests()
+      await fetchUsers()
+    },
+    [fetchUserRequests, fetchUsers]
+  )
+
+  const handleDeclineRequest = useCallback((requestId: number) => {
+    setSubscriptionRequests((prev) => prev.filter((r) => r.id !== requestId))
+    setPendingRequestsCount((prev) => Math.max(0, prev - 1))
+  }, [])
+
+  const handleViewDetails = useCallback((user: any) => {
+    setSelectedUser(user)
+    setIsUserModalOpen(true)
+  }, [])
 
   useEffect(() => {
     fetchUsers()
     fetchUserRequests()
-  }, [])
-
+  }, [fetchUsers, fetchUserRequests])
 
 
   return (
@@ -101,7 +106,7 @@ export default function Users() {
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-2 text-sm text-muted-foreground">
             <UsersIcon className="h-4 w-4" />
-            <span>{users.length} total users</span>
+            <span>{totalUsers} total users</span>
         </div>
         <Button
           variant="outline"

@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useCallback, useMemo } from "react"
 import axios from "axios"
 
 export default function SetPassword() {
@@ -6,24 +6,29 @@ export default function SetPassword() {
   const [confirmPassword, setConfirmPassword] = useState("")
   const [loading, setLoading] = useState(false)
 
-  // ✅ Get token from query string without React Router
-  const params = new URLSearchParams(window.location.search)
-  const token = params.get("token")
+  const token = useMemo(() => {
+    const params = new URLSearchParams(window.location.search)
+    return params.get("token")
+  }, [])
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = useCallback(async (e) => {
     e.preventDefault()
+    if (password.trim().length < 8) {
+      alert("Password must be at least 8 characters long.")
+      return
+    }
     if (password !== confirmPassword) return alert("Passwords do not match")
     setLoading(true)
     try {
       await axios.post("/api/users/set-password", { token, password })
       alert("Password set successfully!")
-      window.location.href = "/login" // redirect to login
+      window.location.href = "/" // redirect to login
     } catch (err) {
       alert("Invalid or expired link")
     } finally {
       setLoading(false)
     }
-  }
+  }, [password, confirmPassword, token])
 
   return (
     <div className="max-w-md mx-auto mt-12 p-6 border rounded-lg shadow">
