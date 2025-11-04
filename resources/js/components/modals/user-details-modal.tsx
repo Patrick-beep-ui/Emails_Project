@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useForm } from "react-hook-form"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback, memo } from "react"
 import { TrashIcon, SaveIcon } from "lucide-react"
 import { updateUser, deleteUser } from "@/services/usersService"
 
@@ -16,7 +16,7 @@ interface UserDetailsModalProps {
   onUserDeleted?: () => void
 }
 
-export function UserDetailsModal({
+function UserDetailsModalComponent({
   isOpen,
   onClose,
   user,
@@ -31,7 +31,7 @@ export function UserDetailsModal({
     if (user) reset(user)
   }, [user, reset])
 
-  const handleUpdate = async (data: any) => {
+  const handleUpdate = useCallback(async (data: any) => {
     try {
       await updateUser(user.user_id, data)
       if (onUserUpdated) onUserUpdated()
@@ -40,9 +40,9 @@ export function UserDetailsModal({
       console.error(error)
       alert("Error updating user")
     }
-  }
+  }, [user, onUserUpdated, onClose])
 
-  const handleDelete = async () => {
+  const handleDelete = useCallback(async () => {
     try {
       await deleteUser(user.user_id)
       if (onUserDeleted) onUserDeleted()
@@ -51,7 +51,7 @@ export function UserDetailsModal({
       console.error(error)
       alert("Error deleting user")
     }
-  }
+  }, [user, onUserDeleted, onClose])
 
   if (!user) return null
 
@@ -119,3 +119,5 @@ export function UserDetailsModal({
     </Dialog>
   )
 }
+
+export const UserDetailsModal = memo(UserDetailsModalComponent)

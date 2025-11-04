@@ -3,6 +3,7 @@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { UserPlusIcon } from "lucide-react"
 import AddUserForm from "../add-user-form"
+import { useCallback, memo } from "react"
 
 interface AddUserModalProps {
   isOpen: boolean
@@ -10,11 +11,11 @@ interface AddUserModalProps {
   onAddUser?: () => void
 }
 
-export function AddUserModal({ isOpen, onClose, onAddUser }: AddUserModalProps) {
-  const handleSuccess = () => {
+function AddUserModalComponent({ isOpen, onClose, onAddUser }: AddUserModalProps) {
+  const handleSuccess = useCallback(() => {
     if (onAddUser) onAddUser()
     onClose()
-  }
+  }, [onAddUser, onClose])
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -34,3 +35,5 @@ export function AddUserModal({ isOpen, onClose, onAddUser }: AddUserModalProps) 
     </Dialog>
   )
 }
+
+export const AddUserModal = memo(AddUserModalComponent)

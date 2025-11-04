@@ -24,7 +24,7 @@ export function TagDetailsModal({ tag, isOpen, onClose, onToggleSubscription, us
   const [loading, setLoading] = useState(false);
 
   const handleRemoveKeyword = (keyword: string) => {
-    // In a real app, this would make an API call
+    // In a future implementation, this would remove the keyword via an API call
     console.log("Removing keyword:", keyword)
   }
 

@@ -254,59 +254,9 @@ export const MyNews: FC<MyNewsProps> = ({
         </div>
       ) : (
         <>
-          {/* Filters */}
-          <NewsFilters
-            availableTags={allTags}
-            selectedTags={selectedTagFilters}
-            onTagToggle={onTagToggle}
-            searchTerm={searchTerm}
-            onSearchChange={onSearchChange}
-            onClearFilters={onClearFilters}
-          />
 
-          {/* Articles */}
-          <div className="space-y-6">
-            {articles.length > 0 ? (
-              articles.map((article) => (
-                <NewsArticleCard
-                  key={article.id}
-                  article={{ ...article, isSaved: savedArticles.includes(article.id) }}
-                  onBookmark={handleBookmark}
-                  onShare={handleShare}
-                />
-              ))
-            ) : (
-              <Card className="border-border/50">
-                <CardContent className="p-12 text-center">
-                  <div className="space-y-2">
-                    <h3 className="text-lg font-medium">No articles found</h3>
-                    <p className="text-muted-foreground">
-                      Try adjusting your search terms or filters to see more articles.
-                    </p>
-                    <Button
-                      variant="outline"
-                      onClick={onClearFilters}
-                      className="mt-4 bg-transparent"
-                    >
-                      Clear all filters
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {showScrollTop && (
-              <button
-                onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-                className="fixed bottom-8 right-8 bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition-all z-50 cursor-pointer"
-              >
-                <ArrowUpIcon className="h-5 w-5" />
-              </button>
-            )}
-          </div>
-
-          {/* Pagination */}
-          <div className="flex justify-center items-center space-x-2 mt-4">
+        {/* Pagination */}
+        <div className="flex justify-center items-center space-x-2 mt-4">
             <Button
               size="sm"
               disabled={currentPage === 1}
@@ -356,6 +306,57 @@ export const MyNews: FC<MyNewsProps> = ({
             >
               Next
             </Button>
+          </div>
+          
+          {/* Filters */}
+          <NewsFilters
+            availableTags={allTags}
+            selectedTags={selectedTagFilters}
+            onTagToggle={onTagToggle}
+            searchTerm={searchTerm}
+            onSearchChange={onSearchChange}
+            onClearFilters={onClearFilters}
+          />
+
+          {/* Articles */}
+          <div className="space-y-6">
+            {articles.length > 0 ? (
+              articles.map((article) => (
+                <NewsArticleCard
+                  key={article.id}
+                  article={{ ...article, isSaved: savedArticles.includes(article.id) }}
+                  onBookmark={handleBookmark}
+                  onShare={handleShare}
+                />
+              ))
+            ) : (
+              <Card className="border-border/50">
+                <CardContent className="p-12 text-center">
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-medium">No articles found</h3>
+                    <p className="text-muted-foreground">
+                      Try adjusting your search terms or filters to see more articles.
+                    </p>
+                    <Button
+                      variant="outline"
+                      onClick={onClearFilters}
+                      className="mt-4 bg-transparent"
+                    >
+                      Clear all filters
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {showScrollTop && (
+              <button
+                onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+                className="fixed bottom-8 right-8 bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition-all z-50 cursor-pointer"
+              >
+                <ArrowUpIcon className="h-5 w-5" />
+              </button>
+            )}
           </div>
         </>
       )}
