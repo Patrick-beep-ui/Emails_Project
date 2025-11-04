@@ -11,7 +11,7 @@ import { User } from "@/contexts/auth-context"
 interface EmailPreferencesModalProps {
   isOpen: boolean
   onClose: () => void
-  user: User
+  user: User | null
 }
 
 interface CcEmails {
@@ -38,7 +38,7 @@ export function EmailPreferencesModal({ isOpen, onClose, user }: EmailPreference
   const loadCcEmails = useCallback(async () => {
     setIsLoading(true)
     try {
-      const response = await getUserRecipients(user.user_id)
+      const response = await getUserRecipients(user?.user_id)
       const {data} = response
       console.log("recipients:",data.recipients)
       setCcEmails(data.recipients.map((r: CcEmails) => r.email_address))
@@ -85,7 +85,7 @@ export function EmailPreferencesModal({ isOpen, onClose, user }: EmailPreference
     setIsSaving(true)
     try {
         const data = {
-            user_id: user.user_id,
+            user_id: user?.user_id,
             recipients: ccEmails.map(email => ({ email_address: email }))
         }
 

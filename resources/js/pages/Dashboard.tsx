@@ -16,6 +16,9 @@ import Users from "./Users"
 import { SubscribedTagsCard } from "@/components/SubscribedTags"
 import { getUserStats } from "@/services/usersService"
 
+import type { Tag } from "@/components/tags-list"
+
+
 // Mock data
 const mockTags = [
   { id: "1", name: "Technology", subscribed: true, keywordCount: 12 },
@@ -35,8 +38,6 @@ const mockArticles = [
     date: "2 hours ago",
     tags: ["Technology"],
     url: "https://techcrunch.com/gpt-5-announcement",
-    readTime: "4 min read",
-    imageUrl: "/ai-technology-announcement.jpg",
   },
   {
     id: "2",
@@ -47,8 +48,6 @@ const mockArticles = [
     date: "4 hours ago",
     tags: ["Business", "Technology"],
     url: "https://reuters.com/tesla-earnings-q4",
-    readTime: "3 min read",
-    imageUrl: "/tesla-stock-market-chart.jpg",
   }
 ]
 
@@ -63,7 +62,7 @@ function Dashboard() {
   const { user, logout } = useAuth()
   const [activeView, setActiveView] = useState("overview")
   const [tags, setTags] = useState(mockTags)
-  const [selectedTag, setSelectedTag] = useState<(typeof mockTags)[0] | null>(null)
+  const [selectedTag, setSelectedTag] = useState<Tag | null>(null)
   const [isTagModalOpen, setIsTagModalOpen] = useState(false)
   const [stats, setStats] = useState<Stats>({
     activeSubscriptions: 0,
@@ -97,7 +96,7 @@ function Dashboard() {
     setTags(tags.map((tag) => (tag.id === tagId ? { ...tag, subscribed: !tag.subscribed } : tag)))
   }, [tags]);
 
-  const openTagDetails = useCallback((tag: (typeof mockTags)[0]) => {
+  const openTagDetails = useCallback((tag: Tag) => {
     setSelectedTag(tag)
     setIsTagModalOpen(true)
   },[selectedTag, isTagModalOpen])
@@ -144,7 +143,7 @@ function Dashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-8">
-              <h1 className="text-xl font-light tracking-wide text-primary">newsflow.</h1>
+              <h1 className="text-xl font-light tracking-wide text-primary">News Emailer</h1>
               <nav className="hidden md:flex space-x-6">
                 <button
                   onClick={() => setActiveView("overview")}
@@ -269,7 +268,7 @@ function Dashboard() {
           </div>
         )}
 
-        {activeView === "tags" && (
+        {user && activeView === "tags" && (
           <TagList
             toggleSubscription={toggleSubscription}
             user={user}
@@ -277,10 +276,9 @@ function Dashboard() {
         )}
 
 
-          {activeView === "news" && (
+          {user && activeView === "news" && (
             <MyNews
             user={user}
-              filteredArticles={filteredArticles}
               selectedTagFilters={selectedTagFilters}
               searchTerm={searchTerm}
               onTagToggle={toggleTagFilter}
@@ -298,6 +296,7 @@ function Dashboard() {
       </main>
 
       <TagDetailsModal
+      user={user}
         tag={selectedTag}
         isOpen={isTagModalOpen}
         onClose={() => setIsTagModalOpen(false)}

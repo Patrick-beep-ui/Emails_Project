@@ -18,7 +18,7 @@ interface TagProps extends Tag {
 }
 
 interface SubscribedTagsCardProps {
-  tags: TagProps[]
+  tags?: TagProps[]
   user: User | null
   openTagDetails: (tag: Tag) => void
 }

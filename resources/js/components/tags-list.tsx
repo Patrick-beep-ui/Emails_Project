@@ -37,7 +37,7 @@ export interface Keyword {
   }
 
   export interface UserWithTags extends User {
-    tags: Tag[]
+    tags?: Tag[]
   }
   
   const tagCache = new Map<string, Tag[]>()
@@ -78,7 +78,7 @@ const TagList: FC<TagListProps> = ({ toggleSubscription, user, }) => {
 
             // Merge subscription status from user tags
             const subscribedTags = response.data.tags.map((tag: Tag) => {
-              const userTagPivot = user.tags.find((t) => t.tag_id === tag.tag_id)?.pivot;
+              const userTagPivot = user.tags?.find((t) => t.tag_id === tag.tag_id)?.pivot;
       
               return {
                 ...tag,

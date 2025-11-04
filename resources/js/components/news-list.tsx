@@ -21,11 +21,11 @@ interface News {
 }
 
 interface User {
-  user_id: number
+  user_id: string
   first_name: string
   last_name: string
   email: string
-  tags: Tag
+  tags?: Tag[]
 }
 
 interface Article {
@@ -36,7 +36,8 @@ interface Article {
   date: string
   tags: string[]
   url: string
-  imageUrl?: string
+  //imageUrl: string
+  readTime?: string
 }
 
 interface MyNewsProps {

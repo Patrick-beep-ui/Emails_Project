@@ -3,6 +3,7 @@
 import type React from "react"
 import { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react"
 import api from "@/services/api" // your axios instance
+import type { Tag } from "@/components/tags-list"
 
 export interface User {
   user_id: string
@@ -10,6 +11,7 @@ export interface User {
   first_name: string
   last_name: string,
   role: string
+  tags?: Tag[]
 }
 
 interface AuthContextType {
