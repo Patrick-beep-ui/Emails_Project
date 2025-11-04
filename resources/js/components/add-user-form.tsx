@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { UserPlusIcon } from "lucide-react"
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState, useCallback, memo } from "react"
 import { getTags } from "@/services/tagServices"
 
 interface AddUserFormProps {
@@ -18,7 +18,7 @@ interface Tags {
   name: string
 }
 
-export default function AddUserForm({ onSuccess }: AddUserFormProps) {
+function AddUserForm({ onSuccess }: AddUserFormProps) {
   const [availableTags, setAvailableTags] = useState<Tags[]>([])
   const {
     register,
@@ -164,3 +164,5 @@ export default function AddUserForm({ onSuccess }: AddUserFormProps) {
     </form>
   )
 }
+
+export default memo(AddUserForm)

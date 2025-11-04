@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { TagsIcon, NewspaperIcon, KeyIcon, LogOutIcon, UserIcon, SettingsIcon } from "lucide-react"
 
 import { TagDetailsModal } from "@/components/modals/tag-details-modal"
-import { EmailPreferencesModal } from "@/components/emails-preferences-modal"
+import { EmailPreferencesModal } from "@/components/modals/emails-preferences-modal"
 
 import TagList  from "@/components/tags-list"
 import { MyNews } from "@/components/news-list"

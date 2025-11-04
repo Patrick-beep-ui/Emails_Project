@@ -2,14 +2,13 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useCallback, memo } from "react"
 import { useAuth } from "@/contexts/auth-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { useNavigate } from "react-router-dom"
 
-export function LoginForm() {
+function LoginFormComponent() {
   const [isLogin, setIsLogin] = useState(true)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -18,7 +17,7 @@ export function LoginForm() {
   const [errorMessage, setErrorMessage] = useState("")
   const { login, register } = useAuth()
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setErrorMessage("")
@@ -48,7 +47,7 @@ export function LoginForm() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [isLogin, email, password, name, login, register])
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
@@ -128,3 +127,5 @@ export function LoginForm() {
     </div>
   )
 }
+
+export const LoginForm =  memo(LoginFormComponent);

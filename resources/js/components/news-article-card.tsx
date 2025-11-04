@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, memo } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -25,10 +25,8 @@ interface NewsArticleCardProps {
   onShare?: (article: NewsArticle) => void
 }
 
-export function NewsArticleCard({ article, onBookmark, onShare }: NewsArticleCardProps) {
+function NewsArticleCardComponent({ article, onBookmark, onShare }: NewsArticleCardProps) {
   const [saved, setSaved] = useState(article.isSaved || false)
-
-  console.log(`Article ID: ${article.id}, isSaved: ${article.isSaved}`)
 
   const handleBookmark = useCallback(() => {
     setSaved(!saved)
@@ -124,3 +122,5 @@ export function NewsArticleCard({ article, onBookmark, onShare }: NewsArticleCar
     </Card>
   )
 }
+
+export const NewsArticleCard = memo(NewsArticleCardComponent)

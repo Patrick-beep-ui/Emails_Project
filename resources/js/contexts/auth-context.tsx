@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { createContext, useContext, useState, useEffect } from "react"
+import { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react"
 import api from "@/services/api" // your axios instance
 
 export interface User {
@@ -48,7 +48,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loadUser()
   }, [])
 
-  const login = async (email: string, password: string) => {
+  const login = useCallback(async (email: string, password: string) => {
     setLoading(true)
     try {
       const { data } = await api.post('/login', { email, password })
@@ -60,9 +60,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  const register = async (email: string, password: string, name: string) => {
+  const register = useCallback(async (email: string, password: string, name: string) => {
     setLoading(true)
     try {
       const { data } = await api.post('/register', { email, password, name })
@@ -73,9 +73,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       await api.post('/logout')
     } catch {}
@@ -83,10 +83,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem('user')
     delete api.defaults.headers.common['Authorization']
     setUser(null)
-  }
+  }, [])
+
+  const value = useMemo(() => ({
+    user,
+    login,
+    register,
+    logout,
+    loading
+  }), [user, login, register, logout, loading])
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   )

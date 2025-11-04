@@ -5,7 +5,7 @@ import { TagsIcon, NewspaperIcon, KeyIcon, LogOutIcon, UserIcon, SettingsIcon, U
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { AddUserModal } from "@/components/modals/add-user-modal"
-import { SubscriptionRequestsModal } from "@/components/subscription-request-modal"
+import { SubscriptionRequestsModal } from "@/components/modals/subscription-request-modal"
 import { UserDetailsModal } from "@/components/modals/user-details-modal"
 
 // Define a type for your user object
@@ -197,7 +197,7 @@ export default function Users() {
           </div>
         </CardContent>
       </Card>
-      <Button onClick={() => setIsAddUserModalOpen(true)} size="sm">
+      <Button onClick={() => setIsAddUserModalOpen(true)} size="sm" className="cursor-pointer">
                   <UserPlusIcon className="h-4 w-4 mr-2" />
                   Add User
             </Button>
