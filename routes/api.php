@@ -48,7 +48,7 @@ Route::prefix('/tags')->group(function () {
     Route::get('/user/{userId}', [TagController::class, 'getUserTags']);
     Route::post('/subscription/request', [TagController::class, 'requestSubscription']);
     Route::post('/subscription/approve', [TagController::class, 'approveSubscription']);
-    //Route::post('/subscription/reject', [TagController::class, 'rejectSubscription']);
+    Route::post('/subscription/reject/{requestId}', [TagController::class, 'rejectSubscription']);
     Route::post('/toggle-status', [TagController::class, 'toggleTagStatus']);
 });
 

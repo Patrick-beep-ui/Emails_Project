@@ -40,15 +40,14 @@ export interface Keyword {
     tags: Tag[]
   }
   
+  const tagCache = new Map<string, Tag[]>()
 
-interface TagListProps {
-  toggleSubscription: (id: string) => void
-  user: UserWithTags
-}
+  interface TagListProps {
+    toggleSubscription: (id: string, state?: "pending" | "subscribed") => void;
+    user: UserWithTags;
+  }
 
-const tagCache = new Map<string, Tag[]>()
-
-const TagList: FC<TagListProps> = ({ toggleSubscription, user }) => {
+const TagList: FC<TagListProps> = ({ toggleSubscription, user, }) => {
     const dataCache = useRef<Tag[] | null>(null);
     const [tagList, setTagList] = useState<Tag[]>([]);
     const [selectedTag, setSelectedTag] = useState<Tag | null>(null);
@@ -145,9 +144,8 @@ const TagList: FC<TagListProps> = ({ toggleSubscription, user }) => {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg font-light">{tag.name}</CardTitle>
-                <Switch 
-                checked={tag.subscribed}
-                />
+                <Switch checked={tag.subscribed} disabled={tag.pending} />
+
               </div>
               <CardDescription>{tag.keywords_count} keywords tracked</CardDescription>
             </CardHeader>

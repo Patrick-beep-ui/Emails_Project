@@ -47,15 +47,16 @@ export default function Users() {
     fetchUsers()
   }
 
-  const handleApproveRequest = (requestId: number) => {
+  const handleApproveRequest = async (requestId: number) => {
     console.log("Approved request:", requestId)
-    // Update state accordingly
+    await fetchUserRequests()
+    await fetchUsers()
   }
 
   const handleDeclineRequest = (requestId: number) => {
-    console.log("Declined request:", requestId)
-    // Update state accordingly
-  }
+    setSubscriptionRequests((prev) => prev.filter((r) => r.id !== requestId));
+    setPendingRequestsCount((prev) => prev - 1);
+  };  
 
   const handleViewDetails = (user: any) => {
     setSelectedUser(user)

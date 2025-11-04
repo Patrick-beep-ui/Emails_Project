@@ -16,7 +16,7 @@ interface TagDetailsModalProps {
     user: User | null
     isOpen: boolean
     onClose: () => void
-    onToggleSubscription: (tagId: string) => void
+    onToggleSubscription: (tagId: string, state?: "pending" | "subscribed") => void
   }
 
 export function TagDetailsModal({ tag, isOpen, onClose, onToggleSubscription, user }: TagDetailsModalProps) {
@@ -43,20 +43,23 @@ export function TagDetailsModal({ tag, isOpen, onClose, onToggleSubscription, us
         return
       }
   
-      // Send as a single object
+      
       const response = await requestSubscription({
         user_id: user.user_id,
         tag_id: tag.tag_id
       });
   
       console.log("Subscription request response:", response.data);
+      onToggleSubscription(tag.tag_id, "pending");
+      tag.pending = true; // Update local state to reflect pending status
+      onClose()
   
     } catch (e) {
       console.error("Subscription request failed:", e);
     } finally {
       setLoading(false)
     }
-  }, [tag, user]);
+  }, [tag, user, onToggleSubscription]);
 
   const keywords: Keyword[] = useMemo(() => {
     return tag?.keywords || []

@@ -80,9 +80,12 @@ export default function Dashboard() {
 
   console.log("User data:", user)
 
+  
   const toggleSubscription = useCallback((tagId: string) => {
     setTags(tags.map((tag) => (tag.id === tagId ? { ...tag, subscribed: !tag.subscribed } : tag)))
-  }, [tags])
+  }, [tags]);
+
+  console.log("Tags on tag details", tags)
 
   const openTagDetails = useCallback((tag: (typeof mockTags)[0]) => {
     setSelectedTag(tag)

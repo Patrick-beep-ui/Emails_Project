@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { X, CheckCircle, XCircle, Clock } from "lucide-react"
 import { Subscription } from "@/pages/Users"
-import { approveSubscription } from "@/services/tagServices"
+import { approveSubscription, rejectSubscription } from "@/services/tagServices"
 
 interface SubscriptionRequestsModalProps {
   isOpen: boolean
@@ -27,19 +27,28 @@ export function SubscriptionRequestsModal({
 
   if (!isOpen) return null
 
-  const handleApprove = async (userId: number, tagId: number) => {
+  const handleApprove = async (userId: number, tagId: number, requestId: number) => {
     setIsLoading(true)
-    await approveSubscription({
-        user_id: userId,
-        tag_id: tagId
-    })
-    setIsLoading(false)
+    try {
+      await approveSubscription({ user_id: userId, tag_id: tagId })
+      onApprove(requestId) 
+    } catch (error) {
+      console.error(error)
+    } finally {
+      setIsLoading(false)
+    }
   }
-
+  
   const handleDecline = async (requestId: number) => {
     setIsLoading(true)
-    await onDecline(requestId)
-    setIsLoading(false)
+    try {
+      await rejectSubscription(requestId)
+      onDecline(requestId) 
+    } catch (error) {
+      console.error(error)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -117,7 +126,7 @@ export function SubscriptionRequestsModal({
                         </Button>   
                         <Button
                           size="sm"
-                          onClick={() => handleApprove(request.user_id, request.tag_id)}
+                          onClick={() => handleApprove(request.user_id, request.tag_id, request.id)}
                           disabled={isLoading}
                           className="bg-primary hover:bg-primary/90"
                         >

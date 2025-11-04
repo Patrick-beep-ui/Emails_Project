@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
 use App\Models\Tag;
 use App\Models\User;
 use Exception;
@@ -119,8 +120,12 @@ class TagController extends Controller
                 ], 409);
             }
 
+            DB::beginTransaction();
+
             // Create pending subscription
             $tag->userTags()->attach($request->user_id, ['is_active' => 0, 'is_pending' => 1]);
+
+            DB::commit();
 
             return response()->json([
                 'success' => true,
@@ -128,6 +133,7 @@ class TagController extends Controller
             ]);
         }
         catch(Exception $e) {
+            DB::rollBack();
             return response()->json([
                 'success' => false,
                 'message' => 'Error requesting subscription',
@@ -168,8 +174,12 @@ class TagController extends Controller
                 ], 404);
             }
 
+            DB::beginTransaction();
+
             // Approve subscription
             $tag->userTags()->updateExistingPivot($request->user_id, ['is_active' => 1, 'is_pending' => 0]);
+
+            DB::commit();
 
             return response()->json([
                 'success' => true,
@@ -177,6 +187,7 @@ class TagController extends Controller
             ]);
         }
         catch(Exception $e) {
+            DB::rollBack();
             return response()->json([
                 'success' => false,
                 'message' => 'Error approving subscription',
@@ -184,6 +195,49 @@ class TagController extends Controller
             ]);
         }
     }
+
+    public function rejectSubscription($requestId)
+    {
+        try {
+            // Find the pivot row by ID
+            $subscription = DB::table('user_tags')->where('id', $requestId)->first();
+    
+            if (!$subscription) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Subscription request not found'
+                ], 404);
+            }
+    
+            // Ensure it’s a pending subscription before deleting
+            if (!$subscription->is_pending) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This subscription is not pending and cannot be rejected'
+                ], 400);
+            }
+    
+            DB::beginTransaction();
+    
+            // Delete the pivot record
+            DB::table('user_tags')->where('id', $requestId)->delete();
+    
+            DB::commit();
+    
+            return response()->json([
+                'success' => true,
+                'message' => 'Subscription request rejected successfully'
+            ]);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Error rejecting subscription',
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+    
 
     public function toggleTagStatus(Request $request)
     {
