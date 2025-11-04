@@ -14,11 +14,13 @@ export function LoginForm() {
   const [password, setPassword] = useState("")
   const [name, setName] = useState("")
   const [loading, setLoading] = useState(false)
+  const [errorMessage, setErrorMessage] = useState("")
   const { login, register } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
+    setErrorMessage("")
 
     try {
       if (isLogin) {
@@ -26,8 +28,21 @@ export function LoginForm() {
       } else {
         await register(email, password, name)
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Authentication error:", error)
+      if (error.response) {
+        const { status, data } = error.response
+  
+        if (status === 401) {
+          alert("Incorrect email or password.")
+        } else if (status === 409 || data.message?.includes("already authenticated")) {
+          alert("You are already signed in.")
+        } else {
+          alert(data.message || "An unexpected error occurred.")
+        }
+      } else {
+        alert("Network error. Please check your connection.")
+      }
     } finally {
       setLoading(false)
     }
@@ -37,7 +52,7 @@ export function LoginForm() {
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-light tracking-wide text-primary mb-2">newsflow.</h1>
+          <h1 className="text-3xl font-light tracking-wide text-primary mb-2">News Emailer</h1>
           <p className="text-muted-foreground text-sm">Personalized news delivery</p>
         </div>
 
@@ -87,6 +102,10 @@ export function LoginForm() {
                 />
               </div>
 
+              {errorMessage && (
+                <p className="text-destructive text-sm text-center">{errorMessage}</p>
+              )}
+
               <Button type="submit" className="w-full bg-primary hover:bg-primary/90" disabled={loading}>
                 {loading ? "Please wait..." : isLogin ? "Sign in" : "Create account"}
               </Button>
@@ -98,7 +117,7 @@ export function LoginForm() {
                 onClick={() => setIsLogin(!isLogin)}
                 className="text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
-                {isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
+                {/*isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"*/}
               </button>
             </div>
           </CardContent>

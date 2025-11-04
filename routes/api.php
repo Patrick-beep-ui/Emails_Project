@@ -17,14 +17,19 @@ Route::middleware('auth:sanctum')->get('/user', [AuthController::class, 'user'])
 Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
 
 Route::prefix('/users')->group(function() {
+    // Users Crud
     Route::get('/', [UserController::class, 'users']);
     Route::post('/add', [UserController::class, 'add']);
+    Route::put('/{id}', [UserController::class, 'update']);
+    Route::delete('/{id}', [UserController::class, 'delete']);
+
+
     Route::get('/tags/{id}', [UserController::class, 'tags']);
     Route::get('/user/stats/{id}', [UserController::class, 'getDashboardStats']);
     Route::get('/subscriptions/requests', [UserController::class, 'showTagRequests']);
 
     //test sending email
-    //Route::get('/send-email/{userId}', [UserController::class, 'sendEmail']);
+    Route::get('/send-email/{userId}', [UserController::class, 'sendEmail']);
     Route::get('/send-invite/{userId}', [UserController::class, 'sendInviteEmail']);
     Route::post('/set-password', [UserController::class, 'setPassword']);
 

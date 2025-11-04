@@ -127,6 +127,59 @@ class UserController extends Controller
         }
     }
 
+    public function update(Request $request, $id){
+        try {
+            $user = User::findOrFail($id);
+
+            $validator = Validator::make($request->all(), [
+                'first_name' => 'required|string|max:255',
+                'last_name'  => 'required|string|max:255',
+                'email'      => 'required|email|max:255|unique:users,email,' . $id . ',user_id',
+            ]);
+    
+            if ($validator->fails()) {
+                return response()->json(['errors' => $validator->errors()], 422);
+            }
+
+            DB::beginTransaction();
+    
+            $user->update($request->only(['first_name', 'last_name', 'email']));
+
+            DB::commit();
+    
+            return response()->json(['success' => true, 'message' => 'User updated successfully', 'user' => $user]);
+        }
+        catch(Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Error updating user',
+                'error'   => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function delete($id){
+        try {
+            $user = User::findOrFail($id);
+
+            DB::beginTransaction();
+            $user->delete();
+            DB::commit();
+
+            return response()->json(['success' => true, 'message' => 'User deleted successfully']);
+        }
+        catch(Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Error deleting user',
+                'error'   => $e->getMessage()
+            ], 500);
+        }
+    }
+
+
     public function tags($userId) {
         try {
             $validator = Validator::make(['userId' => $userId], [

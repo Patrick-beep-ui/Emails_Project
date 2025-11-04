@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { AddUserModal } from "@/components/add-user-modal"
 import { SubscriptionRequestsModal } from "@/components/subscription-request-modal"
+import { UserDetailsModal } from "@/components/user-details-modal"
 
 // Define a type for your user object
 interface UserType {
@@ -35,13 +36,15 @@ interface GetUsersResponse {
 
 export default function Users() {
   const [users, setUsers] = useState<UserType[]>([])
-  const [subscriptionRequests, setSubscriptionRequests] = useState<Subscription[]>([]) // Define a proper type 
-  const [pendingRequestsCount, setPendingRequestsCount] = useState(0) // Example count
+  const [subscriptionRequests, setSubscriptionRequests] = useState<Subscription[]>([]) 
+  const [pendingRequestsCount, setPendingRequestsCount] = useState(0)
   const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false)
   const [isRequestsModalOpen, setIsRequestsModalOpen] = useState(false)
+  const [selectedUser, setSelectedUser] = useState(null)
+  const [isUserModalOpen, setIsUserModalOpen] = useState(false)
 
   const handleUserAdded = () => {
-    console.log("User added successfully, refreshing list...")
+    fetchUsers()
   }
 
   const handleApproveRequest = (requestId: number) => {
@@ -52,6 +55,11 @@ export default function Users() {
   const handleDeclineRequest = (requestId: number) => {
     console.log("Declined request:", requestId)
     // Update state accordingly
+  }
+
+  const handleViewDetails = (user: any) => {
+    setSelectedUser(user)
+    setIsUserModalOpen(true)
   }
 
   const fetchUsers = async () => {
@@ -171,7 +179,7 @@ export default function Users() {
                     </td>
                     <td className="p-4">
                       <div className="flex items-center justify-end space-x-2">
-                        <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
+                        <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground" onClick={() => handleViewDetails(user)}>
                           View Details
                         </Button>
                       </div>
@@ -199,6 +207,14 @@ export default function Users() {
         onApprove={handleApproveRequest}
         onDecline={handleDeclineRequest}
       />
+
+    <UserDetailsModal
+      isOpen={isUserModalOpen}
+      onClose={() => setIsUserModalOpen(false)}
+      user={selectedUser}
+      onUserUpdated={fetchUsers}
+      onUserDeleted={fetchUsers}
+    />
     </div>
   )
 }
