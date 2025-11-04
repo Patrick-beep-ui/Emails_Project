@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/auth-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useNavigate } from "react-router-dom"
 
 export function LoginForm() {
   const [isLogin, setIsLogin] = useState(true)
@@ -25,6 +26,7 @@ export function LoginForm() {
     try {
       if (isLogin) {
         await login(email, password)
+        window.location.href = "/"
       } else {
         await register(email, password, name)
       }

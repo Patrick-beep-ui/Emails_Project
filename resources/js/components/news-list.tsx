@@ -6,10 +6,9 @@ import { Button } from "@/components/ui/button"
 import { NewsFilters } from "@/components/news-filters"
 import { NewsArticleCard } from "@/components/news-article-card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-
 import { getUserNews, saveNews, unsaveNews, getSavedNews } from "@/services/newsServices"
 import { Tag } from "./tags-list"
-import { ArrowUpIcon } from "lucide-react"
+import { ArrowUpIcon, Loader2 } from "lucide-react"
 
 interface News {
   news_id: number
@@ -85,38 +84,42 @@ export const MyNews: FC<MyNewsProps> = ({
   const [currentPage, setCurrentPage] = useState(1)
   const [lastPage, setLastPage] = useState(1)
   const [showScrollTop, setShowScrollTop] = useState(false)
+  const [loading, setLoading] = useState(true)
 
   // Fetch news
-  useEffect(() => {
-    const fetchNews = async () => {
-      try {
-        const response = await getUserNews(
-          user.user_id,
-          currentPage,
-          selectedMonth || undefined,
-          selectedYear || undefined
-        )
-        setNewsData(response.data.news.data)
-        setLastPage(response.data.news.last_page)
-      } catch (e) {
-        console.error("Failed to fetch news:", e)
-      }
+  const fetchNews = useCallback(async () => {
+    setLoading(true)
+    try {
+      const response = await getUserNews(
+        user.user_id,
+        currentPage,
+        selectedMonth || undefined,
+        selectedYear || undefined
+      )
+      setNewsData(response.data.news.data)
+      setLastPage(response.data.news.last_page)
+    } catch (e) {
+      console.error("Failed to fetch news:", e)
+    } finally {
+      setLoading(false)
     }
-
-    fetchNews()
   }, [user.user_id, currentPage, selectedMonth, selectedYear])
+
+  // Fetch on dependencies change
+  useEffect(() => {
+    fetchNews()
+  }, [fetchNews])
 
   // Scroll to top button
   useEffect(() => {
     const handleScroll = () => {
       setShowScrollTop(window.scrollY > 300)
     }
-
     window.addEventListener("scroll", handleScroll)
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
 
-  // load saved news when user loads
+  // Load saved news when user loads
   useEffect(() => {
     const fetchSaved = async () => {
       try {
@@ -130,30 +133,32 @@ export const MyNews: FC<MyNewsProps> = ({
     fetchSaved()
   }, [user.user_id])
 
-  const articles: Article[] = newsData
-    .map((newsItem) => ({
-      id: newsItem.news_id.toString(),
-      title: newsItem.news_title,
-      snippet: newsItem.news_description,
-      source: newsItem.news_domain,
-      date: newsItem.news_date.split(" ")[0],
-      tags: [newsItem.news_category],
-      url: newsItem.news_url,
-    }))
-    .filter((article) => {
-      const matchesSearch =
-        searchTerm === "" ||
-        article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        article.snippet.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        article.source.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        article.tags.some((tag) => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+  const articles: Article[] = useMemo(() => {
+    return newsData
+      .map((newsItem) => ({
+        id: newsItem.news_id.toString(),
+        title: newsItem.news_title,
+        snippet: newsItem.news_description,
+        source: newsItem.news_domain,
+        date: newsItem.news_date.split(" ")[0],
+        tags: [newsItem.news_category],
+        url: newsItem.news_url,
+      }))
+      .filter((article) => {
+        const matchesSearch =
+          !searchTerm ||
+          article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          article.snippet.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          article.source.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          article.tags.some((tag) => tag.toLowerCase().includes(searchTerm.toLowerCase()))
 
-      const matchesTags =
-        selectedTagFilters.length === 0 ||
-        selectedTagFilters.some((tag) => article.tags.includes(tag))
+        const matchesTags =
+          selectedTagFilters.length === 0 ||
+          selectedTagFilters.some((tag) => article.tags.includes(tag))
 
-      return matchesSearch && matchesTags
-    })
+        return matchesSearch && matchesTags
+      })
+  }, [newsData, searchTerm, selectedTagFilters])
 
   const allTags = useMemo(() => {
     return Array.from(new Set(newsData.flatMap((n) => [n.news_category])))
@@ -175,20 +180,22 @@ export const MyNews: FC<MyNewsProps> = ({
     }
   }, [])
 
-  const handleBookmark = useCallback(async (articleId: string, currentlySaved: boolean) => {
-    try {
-      if (currentlySaved) {
-        await unsaveNews(user.user_id, parseInt(articleId))
-        setSavedArticles(savedArticles.filter((id) => id !== articleId))
-      } else {
-        await saveNews(user.user_id, parseInt(articleId))
-        setSavedArticles([...savedArticles, articleId])
+  const handleBookmark = useCallback(
+    async (articleId: string, currentlySaved: boolean) => {
+      try {
+        if (currentlySaved) {
+          await unsaveNews(user.user_id, parseInt(articleId))
+          setSavedArticles(savedArticles.filter((id) => id !== articleId))
+        } else {
+          await saveNews(user.user_id, parseInt(articleId))
+          setSavedArticles([...savedArticles, articleId])
+        }
+      } catch (e) {
+        console.error("Error saving/unsaving news:", e)
       }
-    } catch (e) {
-      console.error("Error saving/unsaving news:", e)
-    }
-  }, [user.user_id]);
-  
+    },
+    [user.user_id, savedArticles]
+  )
 
   return (
     <div className="space-y-6">
@@ -200,6 +207,7 @@ export const MyNews: FC<MyNewsProps> = ({
         </p>
       </div>
 
+      {/* Filters */}
       <div className="flex flex-wrap gap-4 mb-6">
         <Select onValueChange={(value) => setSelectedMonth(Number(value))}>
           <SelectTrigger className="w-[180px]">
@@ -239,115 +247,118 @@ export const MyNews: FC<MyNewsProps> = ({
         </Button>
       </div>
 
-    {/* Pagination Buttons */}
-    <div className="flex justify-center items-center space-x-2 mt-4">
-      <Button
-        size="sm"
-        disabled={currentPage === 1}
-        onClick={() => setCurrentPage(currentPage - 1)}
-      >
-        Previous
-      </Button>
+      {/* Loading Spinner */}
+      {loading ? (
+        <div className="flex justify-center items-center h-64">
+          <Loader2 className="h-10 w-10 animate-spin text-muted-foreground" />
+        </div>
+      ) : (
+        <>
+          {/* Filters */}
+          <NewsFilters
+            availableTags={allTags}
+            selectedTags={selectedTagFilters}
+            onTagToggle={onTagToggle}
+            searchTerm={searchTerm}
+            onSearchChange={onSearchChange}
+            onClearFilters={onClearFilters}
+          />
 
-      {(() => {
-        const visiblePages: (number | string)[] = []
-        const total = lastPage
+          {/* Articles */}
+          <div className="space-y-6">
+            {articles.length > 0 ? (
+              articles.map((article) => (
+                <NewsArticleCard
+                  key={article.id}
+                  article={{ ...article, isSaved: savedArticles.includes(article.id) }}
+                  onBookmark={handleBookmark}
+                  onShare={handleShare}
+                />
+              ))
+            ) : (
+              <Card className="border-border/50">
+                <CardContent className="p-12 text-center">
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-medium">No articles found</h3>
+                    <p className="text-muted-foreground">
+                      Try adjusting your search terms or filters to see more articles.
+                    </p>
+                    <Button
+                      variant="outline"
+                      onClick={onClearFilters}
+                      className="mt-4 bg-transparent"
+                    >
+                      Clear all filters
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
-        if (total <= 7) {
-          // Show all pages if few
-          for (let i = 1; i <= total; i++) visiblePages.push(i)
-        } else {
-          // Always show first and last
-          const start = Math.max(2, currentPage - 2)
-          const end = Math.min(total - 1, currentPage + 2)
+            {showScrollTop && (
+              <button
+                onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+                className="fixed bottom-8 right-8 bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition-all z-50 cursor-pointer"
+              >
+                <ArrowUpIcon className="h-5 w-5" />
+              </button>
+            )}
+          </div>
 
-          visiblePages.push(1)
-          if (start > 2) visiblePages.push("...")
-
-          for (let i = start; i <= end; i++) visiblePages.push(i)
-
-          if (end < total - 1) visiblePages.push("...")
-          visiblePages.push(total)
-        }
-
-        return visiblePages.map((page, idx) =>
-          typeof page === "number" ? (
+          {/* Pagination */}
+          <div className="flex justify-center items-center space-x-2 mt-4">
             <Button
-              key={idx}
               size="sm"
-              variant={page === currentPage ? "default" : "outline"}
-              onClick={() => setCurrentPage(page)}
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage(currentPage - 1)}
             >
-              {page}
+              Previous
             </Button>
-          ) : (
-            <span key={idx} className="text-muted-foreground px-2">
-              {page}
-            </span>
-          )
-        )
-      })()}
 
-      <Button
-        size="sm"
-        disabled={currentPage === lastPage}
-        onClick={() => setCurrentPage(currentPage + 1)}
-      >
-        Next
-      </Button>
-    </div>
+            {(() => {
+              const visiblePages: (number | string)[] = []
+              const total = lastPage
 
+              if (total <= 7) {
+                for (let i = 1; i <= total; i++) visiblePages.push(i)
+              } else {
+                const start = Math.max(2, currentPage - 2)
+                const end = Math.min(total - 1, currentPage + 2)
+                visiblePages.push(1)
+                if (start > 2) visiblePages.push("...")
+                for (let i = start; i <= end; i++) visiblePages.push(i)
+                if (end < total - 1) visiblePages.push("...")
+                visiblePages.push(total)
+              }
 
-      {/* Filters */}
-      <NewsFilters
-        availableTags={allTags}
-        selectedTags={selectedTagFilters}
-        onTagToggle={onTagToggle}
-        searchTerm={searchTerm}
-        onSearchChange={onSearchChange}
-        onClearFilters={onClearFilters}
-      />
+              return visiblePages.map((page, idx) =>
+                typeof page === "number" ? (
+                  <Button
+                    key={idx}
+                    size="sm"
+                    variant={page === currentPage ? "default" : "outline"}
+                    onClick={() => setCurrentPage(page)}
+                  >
+                    {page}
+                  </Button>
+                ) : (
+                  <span key={idx} className="text-muted-foreground px-2">
+                    {page}
+                  </span>
+                )
+              )
+            })()}
 
-      {/* Articles */}
-      <div className="space-y-6">
-        {articles.length > 0 ? (
-          articles.map((article) => (
-            <NewsArticleCard
-              key={article.id}
-              article={{ ...article, isSaved: savedArticles.includes(article.id) }}
-              onBookmark={handleBookmark}
-              onShare={handleShare}
-            />
-          ))
-        ) : (
-          <Card className="border-border/50">
-            <CardContent className="p-12 text-center">
-              <div className="space-y-2">
-                <h3 className="text-lg font-medium">No articles found</h3>
-                <p className="text-muted-foreground">
-                  Try adjusting your search terms or filters to see more articles.
-                </p>
-                <Button
-                  variant="outline"
-                  onClick={onClearFilters}
-                  className="mt-4 bg-transparent"
-                >
-                  Clear all filters
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {showScrollTop && (
-          <button
-            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-            className="fixed bottom-8 right-8 bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition-all z-50 cursor-pointer"
-          >
-            <ArrowUpIcon className="h-5 w-5" />
-          </button>
-        )}
-      </div>
+            <Button
+              size="sm"
+              disabled={currentPage === lastPage}
+              onClick={() => setCurrentPage(currentPage + 1)}
+            >
+              Next
+            </Button>
+          </div>
+        </>
+      )}
     </div>
   )
 }
