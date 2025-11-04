@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { SearchIcon, PlusIcon, XIcon } from "lucide-react"
-import { Tag, Keyword } from "./tags-list"
+import { Tag, Keyword } from "../tags-list"
 import { requestSubscription } from "@/services/tagServices"
 import { User } from "@/contexts/auth-context"
 

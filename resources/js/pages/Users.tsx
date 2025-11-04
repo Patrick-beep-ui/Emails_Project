@@ -4,9 +4,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { TagsIcon, NewspaperIcon, KeyIcon, LogOutIcon, UserIcon, SettingsIcon, UsersIcon, UserPlusIcon, BellIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { AddUserModal } from "@/components/add-user-modal"
+import { AddUserModal } from "@/components/modals/add-user-modal"
 import { SubscriptionRequestsModal } from "@/components/subscription-request-modal"
-import { UserDetailsModal } from "@/components/user-details-modal"
+import { UserDetailsModal } from "@/components/modals/user-details-modal"
 
 // Define a type for your user object
 interface UserType {

@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { SettingsIcon, Tag, Loader2 } from "lucide-react"
-import { TagDetailsModal } from "./tag-details-modal"
+import { TagDetailsModal } from "./modals/tag-details-modal"
 import { User } from "@/contexts/auth-context"
 
 

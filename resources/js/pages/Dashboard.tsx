@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { TagsIcon, NewspaperIcon, KeyIcon, LogOutIcon, UserIcon, SettingsIcon } from "lucide-react"
 
-import { TagDetailsModal } from "@/components/tag-details-modal"
+import { TagDetailsModal } from "@/components/modals/tag-details-modal"
 import { EmailPreferencesModal } from "@/components/emails-preferences-modal"
 
 import TagList  from "@/components/tags-list"

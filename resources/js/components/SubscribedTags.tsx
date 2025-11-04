@@ -10,7 +10,7 @@ import { useState, useEffect, useCallback } from "react"
 import { getUserTags, toggleTagStatus } from "@/services/tagServices"
 import { User } from "@/contexts/auth-context"
 import { Tag } from "./tags-list"
-import { DeactiveConfirmationModal } from "./unactive-confirmation"
+import { DeactiveConfirmationModal } from "./confirmations/unactive-confirmation"
 
 interface TagProps extends Tag {
   is_active: boolean

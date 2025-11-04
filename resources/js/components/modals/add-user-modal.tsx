@@ -2,7 +2,7 @@
 
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { UserPlusIcon } from "lucide-react"
-import AddUserForm from "./add-user-form"
+import AddUserForm from "../add-user-form"
 
 interface AddUserModalProps {
   isOpen: boolean
