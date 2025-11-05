@@ -100,7 +100,7 @@ export function TagDetailsModal({ tag, isOpen, onClose, onToggleSubscription, us
                   className="shrink-0"
                   disabled={tag.pending || loading}
                 >
-                  {loading ? "Processing..." : tag.pending ? "Pending" : tag.subscribed ? "Unsubscribe" : "Subscribe"}
+                  {loading ? "Processing..." : tag.pending ? "Pending" : tag.subscribed ? "Unsubscribe" : tag.deactivated ? "Deactivated" : "Subscribe"}
                 </Button>
               </div>
             </CardHeader>

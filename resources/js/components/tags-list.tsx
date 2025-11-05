@@ -31,6 +31,7 @@ export interface Keyword {
     description: string
     subscribed: boolean
     pending: boolean
+    deactivated: boolean
     keywords_count?: number
     keywords?: Keyword[]
     pivot: Pivot
@@ -84,6 +85,7 @@ const TagList: FC<TagListProps> = ({ toggleSubscription, user, }) => {
                 ...tag,
                 subscribed: !!userTagPivot?.is_active,   
                 pending: !!userTagPivot?.is_pending,
+                deactivated: userTagPivot ? !userTagPivot.is_active && !userTagPivot.is_pending : false,
               };
             });
 
