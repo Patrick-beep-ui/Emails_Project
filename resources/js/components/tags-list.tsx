@@ -12,6 +12,7 @@ import { User } from "@/contexts/auth-context"
 
 import { useState, useEffect, useCallback, useRef } from "react"
 import { getTagsInfo } from "@/services/tagServices"
+import { useTempTagState } from "@/hooks/useTempTagState"
 
 export interface Keyword {
     id: string
@@ -55,6 +56,8 @@ const TagList: FC<TagListProps> = ({ toggleSubscription, user, }) => {
     const [isTagModalOpen, setIsTagModalOpen] = useState(false)
     const [isLoading, setIsLoading] = useState(false);
     const [hasLoaded, setHasLoaded] = useState(false); // mounted flag
+    const { getTagState } = useTempTagState();
+
 
       const openTagDetails = useCallback((tag: Tag) => {
         setSelectedTag(tag)
@@ -80,17 +83,20 @@ const TagList: FC<TagListProps> = ({ toggleSubscription, user, }) => {
             // Merge subscription status from user tags
             const subscribedTags = response.data.tags.map((tag: Tag) => {
               const userTagPivot = user.tags?.find((t) => t.tag_id === tag.tag_id)?.pivot;
+              const localState = getTagState(tag.tag_id);
+
+              console.log("Local State:", localState);
       
               return {
                 ...tag,
-                subscribed: !!userTagPivot?.is_active,   
+                subscribed: localState ?? !!userTagPivot?.is_active,  
                 pending: !!userTagPivot?.is_pending,
                 deactivated: userTagPivot ? !userTagPivot.is_active && !userTagPivot.is_pending : false,
               };
             });
 
             setTagList(subscribedTags);
-            tagCache.set(user.user_id, subscribedTags)
+            //tagCache.set(user.user_id, subscribedTags) Future cache implementation
           } catch (e) {
             console.error("Failed to fetch tags:", e);
           } finally {
@@ -100,7 +106,7 @@ const TagList: FC<TagListProps> = ({ toggleSubscription, user, }) => {
         };
       
         getTags();
-      }, [user]);
+      }, [user, getTagState]);
       
 
       const renderKeywords = useCallback((tag: Tag, maxDisplay: number = 3) => {

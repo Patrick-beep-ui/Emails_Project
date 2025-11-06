@@ -10,6 +10,7 @@ import { SearchIcon, PlusIcon, XIcon } from "lucide-react"
 import { Tag, Keyword } from "../tags-list"
 import { requestSubscription } from "@/services/tagServices"
 import { User } from "@/contexts/auth-context"
+import { useTempTagState } from "@/hooks/useTempTagState"
 
 interface TagDetailsModalProps {
     tag: Tag | null
@@ -22,6 +23,13 @@ interface TagDetailsModalProps {
 export function TagDetailsModal({ tag, isOpen, onClose, onToggleSubscription, user }: TagDetailsModalProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [loading, setLoading] = useState(false);
+  const { getTagState } = useTempTagState();
+  const currentState = tag
+  ? getTagState(tag.tag_id) ?? !tag.deactivated
+  : null;
+
+
+  console.log("Temp tag state for", tag?.tag_id, "is", currentState);
 
   const handleRemoveKeyword = (keyword: string) => {
     // In a future implementation, this would remove the keyword via an API call
@@ -91,16 +99,24 @@ export function TagDetailsModal({ tag, isOpen, onClose, onToggleSubscription, us
                 <div>
                   <CardTitle className="text-base font-medium">Subscription Status</CardTitle>
                   <CardDescription className="text-sm">
-                    {tag.subscribed ? "You're receiving news for this category" : "Subscribe to receive news updates"}
+                    {/*tag.subscribed ? "You're receiving news for this category" : "Subscribe to receive news updates"*/}
+                    {currentState
+                      ? "You're receiving news for this category"
+                      : "Subscribe to receive news updates"
+                    }
                   </CardDescription>
                 </div>
                 <Button
                   variant={tag.subscribed ? "destructive" : "default"}
                   onClick={() => handleRequestSubscription()}
                   className="shrink-0"
-                  disabled={tag.pending || loading}
+                  disabled={
+                    loading ||
+                    tag.pending ||
+                    (currentState !== null ? currentState === false : tag.deactivated === false)
+                  }
                 >
-                  {loading ? "Processing..." : tag.pending ? "Pending" : tag.subscribed ? "Unsubscribe" : tag.deactivated ? "Deactivated" : "Subscribe"}
+                  {loading ? "Processing..." : tag.pending ? "Pending" : tag.subscribed ? "Unsubscribe" : tag.deactivated || currentState == false ? "Deactivated" : "Subscribe"}
                 </Button>
               </div>
             </CardHeader>

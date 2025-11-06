@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/auth-context"
 import Login from "./Login"
 import Dashboard from "./Dashboard"
 import {memo} from "react"
+import { TagsProvider } from "@/contexts/tags-context"
 
 function Home() {
   const { user, loading } = useAuth()
@@ -16,7 +17,13 @@ function Home() {
     )
   }
 
-  return user ? <Dashboard /> : <Login />
+  return user ? (
+    <TagsProvider user={user}> 
+      <Dashboard />
+    </TagsProvider>
+  ) : (
+    <Login />
+  )
 }
 
 export default memo(Home);

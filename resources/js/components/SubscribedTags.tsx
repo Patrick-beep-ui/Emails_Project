@@ -11,6 +11,7 @@ import { getUserTags, toggleTagStatus } from "@/services/tagServices"
 import { User } from "@/contexts/auth-context"
 import { Tag } from "./tags-list"
 import { DeactiveConfirmationModal } from "./confirmations/unactive-confirmation"
+import { useTempTagState } from "@/hooks/useTempTagState";
 
 interface TagProps extends Tag {
   is_active: boolean
@@ -28,6 +29,7 @@ export function SubscribedTagsCard({ openTagDetails, user }: SubscribedTagsCardP
   const [isDeactiveModalOpen, setIsDeactiveModalOpen] = useState(false)
   const [selectedTag, setSelectedTag] = useState<TagProps | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const { setTagState } = useTempTagState();
 
   if (!user) return null // or a message/loading spinner;
 
@@ -64,6 +66,7 @@ export function SubscribedTagsCard({ openTagDetails, user }: SubscribedTagsCardP
           setUserTags((prev) =>
             prev.map((t) => (t.tag_id === tag.tag_id ? { ...t, is_active: true } : t))
           )
+          setTagState(tag.tag_id, true); // reflect activated
         } catch (e) {
           console.error("Failed to activate tag:", e)
         }
@@ -79,6 +82,7 @@ export function SubscribedTagsCard({ openTagDetails, user }: SubscribedTagsCardP
       setUserTags((prev) =>
         prev.map((t) => (t.tag_id === selectedTag.tag_id ? { ...t, is_active: false } : t))
       )
+      setTagState(selectedTag.tag_id, false); // reflect deactivated
     } catch (e) {
       console.error("Failed to deactivate tag:", e)
     } finally {

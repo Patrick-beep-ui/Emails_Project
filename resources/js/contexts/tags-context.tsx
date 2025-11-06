@@ -1,93 +1,97 @@
 "use client"
 
-import { createContext, useContext, useState, useEffect, useCallback } from "react"
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react"
 import { getTagsInfo, getUserTags, toggleTagStatus, requestSubscription } from "@/services/tagServices"
 import type { Tag } from "@/components/tags-list"
 import type { User } from "@/contexts/auth-context"
 
 interface TagsContextType {
   tags: Tag[]
-  loading: boolean
-  refreshTags: (userId: string) => Promise<void>
-  toggleTagActive: (userId: string, tagId: string, isActive: boolean) => Promise<void>
-  requestTagSubscription: (userId: string, tagId: string) => Promise<void>
-  setTags: React.Dispatch<React.SetStateAction<Tag[]>>
+  userTags: Tag[]
+  isLoading: boolean
+  refreshTags: () => Promise<void>
+  refreshUserTags: (userId: number) => Promise<void>
+  toggleTag: (userId: number, tagId: string, isActive: boolean) => Promise<void>
+  requestTagSubscription: (userId: number, tagId: string) => Promise<void>
 }
 
 const TagsContext = createContext<TagsContextType | undefined>(undefined)
 
-export function TagsProvider({ user, children }: { user: User | null; children: React.ReactNode }) {
+export const TagsProvider = ({ children }: { children: ReactNode }) => {
   const [tags, setTags] = useState<Tag[]>([])
-  const [loading, setLoading] = useState(false)
+  const [userTags, setUserTags] = useState<Tag[]>([])
+  const [isLoading, setIsLoading] = useState(false)
 
-  const refreshTags = useCallback(async (userId: string) => {
-    if (!userId) return
-    setLoading(true)
+  /* Load all available tags */
+  const refreshTags = useCallback(async () => {
     try {
-      const [allTagsRes, userTagsRes] = await Promise.all([
-        getTagsInfo(),
-        getUserTags(userId),
-      ])
-
-      const userTags = userTagsRes.data.tags
-      const merged = allTagsRes.data.tags.map((tag: Tag) => {
-        const userPivot = userTags.find((t: Tag) => t.tag_id === tag.tag_id)?.pivot
-        return {
-          ...tag,
-          subscribed: !!userPivot?.is_active,
-          pending: !!userPivot?.is_pending,
-          deactivated: userPivot ? !userPivot.is_active && !userPivot.is_pending : false,
-        }
-      })
-
-      setTags(merged)
-    } catch (err) {
-      console.error("Failed to refresh tags:", err)
+      setIsLoading(true)
+      const response = await getTagsInfo()
+      setTags(response.data.tags)
+    } catch (error) {
+      console.error("Failed to fetch tags:", error)
     } finally {
-      setLoading(false)
+      setIsLoading(false)
     }
   }, [])
 
-  const toggleTagActive = useCallback(async (userId: string, tagId: string, isActive: boolean) => {
+  /* Load tags linked to a specific user */
+  const refreshUserTags = useCallback(async (userId: number) => {
+    try {
+      setIsLoading(true)
+      const response = await getUserTags(userId)
+      setUserTags(response.data.tags)
+    } catch (error) {
+      console.error("Failed to fetch user tags:", error)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  /* Toggle subscription on/off */
+  const toggleTag = useCallback(async (userId: number, tagId: string, isActive: boolean) => {
     try {
       await toggleTagStatus({ user_id: userId, tag_id: tagId, is_active: isActive })
-      setTags(prev =>
-        prev.map(tag =>
-          tag.tag_id === tagId
-            ? { ...tag, subscribed: isActive, deactivated: !isActive, pending: false }
-            : tag
-        )
-      )
-    } catch (err) {
-      console.error("Failed to toggle tag:", err)
+      await refreshUserTags(userId)
+    } catch (error) {
+      console.error("Failed to toggle tag:", error)
     }
-  }, [])
+  }, [refreshUserTags])
 
-  const requestTagSubscription = useCallback(async (userId: string, tagId: string) => {
+  /* Request a subscription (pending state) */
+  const requestTagSubscription = useCallback(async (userId: number, tagId: string) => {
     try {
       await requestSubscription({ user_id: userId, tag_id: tagId })
-      setTags(prev =>
-        prev.map(tag =>
-          tag.tag_id === tagId ? { ...tag, pending: true } : tag
-        )
-      )
-    } catch (err) {
-      console.error("Failed to request subscription:", err)
+      await refreshUserTags(userId)
+    } catch (error) {
+      console.error("Failed to request subscription:", error)
     }
-  }, [])
+  }, [refreshUserTags])
 
+  // Load all tags initially
   useEffect(() => {
-    if (user) refreshTags(user.user_id)
-  }, [user])
+    refreshTags()
+  }, [refreshTags])
 
   return (
-    <TagsContext.Provider value={{ tags, loading, refreshTags, toggleTagActive, requestTagSubscription, setTags }}>
+    <TagsContext.Provider
+      value={{
+        tags,
+        userTags,
+        isLoading,
+        refreshTags,
+        refreshUserTags,
+        toggleTag,
+        requestTagSubscription,
+      }}
+    >
       {children}
     </TagsContext.Provider>
   )
 }
 
-export function useTags() {
+/* Custom hook for using the context easily */
+export const useTags = () => {
   const context = useContext(TagsContext)
   if (!context) {
     throw new Error("useTags must be used within a TagsProvider")
